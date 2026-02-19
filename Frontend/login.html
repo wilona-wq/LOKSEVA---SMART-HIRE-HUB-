@@ -544,11 +544,11 @@
         clearInterval(savedOTP[role].timer);  // stop the countdown
         showMessage(role, '✅ Login successful! Redirecting...', 'success');
 
-        // Wait 1.5 seconds then redirect to the dashboard page
+        // Wait 1.5 seconds then redirect to the appropriate dashboard
         // window.location.href changes the page URL
         setTimeout(function() {
-          // all roles currently share the same dashboard
-          window.location.href = 'lokseva-dashboard.html';
+          if (role === 'user')     window.location.href = 'user-dashboard.html';
+          if (role === 'provider') window.location.href = 'provider-dashboard.html';
         }, 1500);
 
       } else {
@@ -583,7 +583,7 @@
       if (username === ADMIN_USER && password === ADMIN_PASS) {
         showMessage('admin', '✅ Admin verified! Redirecting...', 'success');
         setTimeout(function() {
-          window.location.href = 'lokseva-dashboard.html';
+          window.location.href = 'admin-dashboard.html';
         }, 1500);
       } else {
         showMessage('admin', '❌ Wrong username or password.', 'error');
