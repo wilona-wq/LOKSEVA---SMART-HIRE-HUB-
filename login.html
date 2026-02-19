@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Lokseva - Login</title>
+
+  <style>
+
+    /* ---------- PAGE BACKGROUND ---------- */
+    /* Sky blue background, fills the whole screen */
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #5aace0;   /* sky blue  */
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+
+    /* ---------- LOGO CIRCLE (floating above the card) ---------- */
+    /* Dark navy blue circle, sits just above the card */
+    .logo {
+      width: 110px;
+      height: 110px;
+      background-color: #1a2757;   /* dark navy blue  */
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 22px;
+      font-weight: bold;
+      text-align: center;
+      /* Pull it down so it overlaps the card slightly */
+      margin-bottom: -30px;
+      z-index: 2;                  /* makes sure logo sits on top of card */
+      position: relative;
+    }
+
+    /* ---------- OUTER CARD ---------- */
+    /* Light grey rounded rectangle */
+    .card {
+      background-color: #e8edf2;   /* light grey from screenshot */
+      border-radius: 24px;
+      padding: 50px 30px 30px 30px; /* extra top padding for logo overlap */
+      width: 420px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* App name and tagline inside the card */
+    .app-name {
+      font-size: 20px;
+      font-weight: bold;
+      color: #1a2757;              /* dark navy to match logo */
+      text-align: center;
+      margin-bottom: 4px;
+    }
+
+    .app-tagline {
+      font-size: 12px;
+      color: #607080;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    /* ---------- ROLE BUTTONS ---------- */
+    /* Pill-shaped teal/mint buttons in a row */
+    .role-buttons {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .role-btn {
+      flex: 1;
+      padding: 10px 8px;
+      border: none;
+      border-radius: 50px;         /* pill shape */
+      background-color: #80cdd4;   /* mint/teal colour from screenshot */
+      color: #1a2757;              /* dark text on light button */
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+    }
+
+    /* When a role button is selected, darken it slightly */
+    .role-btn.active {
+      background-color: #4aabb5;   /* darker teal when active */
+      color: white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    .role-btn:hover {
+      background-color: #5bbec8;
+    }
+
+    /* ---------- INNER TEAL FORM SECTION ---------- */
+    /* The inner coloured box that holds the form fields */
+    .form-section {
+      display: none;               /* hidden by default */
+      background-color: #80cdd4;   /* same mint/teal as buttons */
+      border-radius: 16px;
+      padding: 24px 20px;
+    }
+
+    /* Show only the selected form */
+    .form-section.active {
+      display: block;
+    }
+
+    .form-title {
+      font-size: 15px;
+      font-weight: bold;
+      color: #1a2757;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    /* ---------- INPUT FIELDS ---------- */
+    /* White pill-shaped input boxes like in screenshot */
+    label {
+      display: block;
+      font-size: 12px;
+      color: #1a2757;
+      margin-bottom: 4px;
+      font-weight: bold;
+      padding-left: 4px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 50px;         /* pill-shaped inputs */
+      font-size: 14px;
+      color: #607080;
+      background-color: white;
+      margin-bottom: 14px;
+      box-sizing: border-box;
+      outline: none;
+    }
+
+    input::placeholder {
+      color: #a0b0c0;
+      font-size: 13px;
+      text-transform: uppercase;   /* like in the screenshot (ADMIN EMAIL) */
+      letter-spacing: 0.5px;
+    }
+
+    input:focus {
+      box-shadow: 0 0 0 2px #1a2757;
+    }
+
+    /* ---------- ACTION BUTTONS (inside the form) ---------- */
+    .btn {
+      width: 100%;
+      padding: 12px;
+      background-color: #1a2757;   /* dark navy */
+      color: white;
+      border: none;
+      border-radius: 50px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 4px;
+    }
+
+    .btn:hover {
+      background-color: #243580;
+    }
+
+    /* Generate OTP button - white outlined style */
+    .btn-outline {
+      width: 100%;
+      padding: 11px;
+      background-color: white;
+      color: #1a2757;
+      border: 2px solid #1a2757;
+      border-radius: 50px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-bottom: 14px;
+    }
+
+    .btn-outline:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* ---------- OTP SECTION ---------- */
+    /* Hidden until OTP is generated */
+    .otp-box {
+      display: none;
+    }
+
+    .otp-box.show {
+      display: block;
+    }
+
+    /* Timer countdown text */
+    .timer {
+      font-size: 13px;
+      color: #1a2757;
+      font-weight: bold;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    .timer.expired {
+      color: #c0392b;              /* red when expired */
+    }
+
+    /* ---------- MESSAGE BOXES (replaces alert popups) ---------- */
+    .message {
+      display: none;               /* hidden by default */
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      margin-bottom: 12px;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    /* Red = error */
+    .message.error {
+      display: block;
+      background-color: #fde8e8;
+      color: #b91c1c;
+      border: 1px solid #f5a5a5;
+    }
+
+    /* Green = success */
+    .message.success {
+      display: block;
+      background-color: #e0f7ea;
+      color: #15803d;
+      border: 1px solid #86efac;
+    }
+
+    /* Blue = info (showing OTP) */
+    .message.info {
+      display: block;
+      background-color: #dbeafe;
+      color: #1d4ed8;
+      border: 1px solid #93c5fd;
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <!-- LOGO CIRCLE (floats above card) -->
+  <div class="logo">
+  <img src="logo.png" alt="Lokseva Logo" width="110" height="110" style="border-radius: 50%;" />
+</div>
+
+  <!-- OUTER CARD -->
+  <div class="card">
+
+    <div class="app-name">Lokseva</div>
+    <div class="app-tagline">Local Services, At Your Doorstep</div>
+
+    <!-- ROLE BUTTONS - pill shaped, teal colour -->
+    <div class="role-buttons">
+      <button class="role-btn" onclick="selectRole('user')">USER</button>
+      <button class="role-btn" onclick="selectRole('provider')">PROVIDER</button>
+      <button class="role-btn" onclick="selectRole('admin')">ADMIN</button>
+    </div>
+
+    <!-- ===== USER FORM ===== -->
+    <div class="form-section" id="form-user">
+      <div class="form-title">User Login</div>
+
+      <!-- Message box: shown instead of alert() -->
+      <div class="message" id="msg-user"></div>
+
+      <label>Email or Phone</label>
+      <input type="text" id="user-contact" placeholder="Email or Phone Number" />
+
+      <label>Password</label>
+      <input type="password" id="user-password" placeholder="Password" />
+
+      <!-- Clicking this will generate a random 4-digit OTP -->
+      <button class="btn-outline" id="user-otp-btn" onclick="generateOTP('user')">
+        Generate OTP
+      </button>
+
+      <!-- This section appears after OTP is generated -->
+      <div class="otp-box" id="user-otp-box">
+        <div class="timer" id="user-timer">⏱ OTP expires in 30s</div>
+        <label>Enter OTP</label>
+        <input type="number" id="user-otp-input" placeholder="Enter 4-Digit OTP" />
+        <button class="btn" onclick="verifyOTP('user')">Login as User</button>
+      </div>
+    </div>
+
+    <!-- ===== PROVIDER FORM ===== -->
+    <div class="form-section" id="form-provider">
+      <div class="form-title">Provider Login</div>
+
+      <div class="message" id="msg-provider"></div>
+
+      <label>Email or Phone</label>
+      <input type="text" id="provider-contact" placeholder="Email or Phone Number" />
+
+      <label>Password</label>
+      <input type="password" id="provider-password" placeholder="Password" />
+
+      <button class="btn-outline" id="provider-otp-btn" onclick="generateOTP('provider')">
+        Generate OTP
+      </button>
+
+      <div class="otp-box" id="provider-otp-box">
+        <div class="timer" id="provider-timer">⏱ OTP expires in 30s</div>
+        <label>Enter OTP</label>
+        <input type="number" id="provider-otp-input" placeholder="Enter 4-Digit OTP" />
+        <button class="btn" onclick="verifyOTP('provider')">Login as Provider</button>
+      </div>
+    </div>
+
+    <!-- ===== ADMIN FORM ===== -->
+    <div class="form-section" id="form-admin">
+      <div class="form-title">Admin Login</div>
+
+      <div class="message" id="msg-admin"></div>
+
+      <label>Admin Username</label>
+      <input type="text" id="admin-username" placeholder="Admin Username" />
+
+      <label>Admin Password</label>
+      <input type="password" id="admin-password" placeholder="Admin Password" />
+
+      <button class="btn" onclick="adminLogin()">Login as Admin</button>
+    </div>
+
+  </div><!-- end card -->
+
+
+  <script>
+
+    // ============================================================
+    // ADMIN CREDENTIALS
+    // These are the fixed username and password for the admin
+    // No OTP is needed for admin login
+    // ============================================================
+    var ADMIN_USER = "admin";
+    var ADMIN_PASS = "admin123";
+
+
+    // ============================================================
+    // OTP STORAGE
+    // This object stores the OTP and timer info for user and provider
+    // ============================================================
+    var savedOTP = {
+      user:     { code: null, expired: false, timer: null },
+      provider: { code: null, expired: false, timer: null }
+    };
+
+
+    // ============================================================
+    // selectRole(role)
+    // Called when a role button (User / Provider / Admin) is clicked
+    // - Highlights the active button
+    // - Shows the correct form, hides the rest
+    // ============================================================
+    function selectRole(role) {
+
+      // Step 1: Remove 'active' class from all 3 role buttons
+      var buttons = document.querySelectorAll('.role-btn');
+      for (var i = 0; i < buttons.length; i++) {
+        buttons[i].classList.remove('active');
+      }
+
+      // Step 2: Add 'active' to the button that was clicked
+      // We find it by checking if the button text includes the role name
+      for (var i = 0; i < buttons.length; i++) {
+        if (buttons[i].textContent.toLowerCase().includes(role)) {
+          buttons[i].classList.add('active');
+        }
+      }
+
+      // Step 3: Hide all form sections
+      var forms = document.querySelectorAll('.form-section');
+      for (var i = 0; i < forms.length; i++) {
+        forms[i].classList.remove('active');
+      }
+
+      // Step 4: Show only the form for the selected role
+      document.getElementById('form-' + role).classList.add('active');
+
+      // Step 5: Clear any old messages when switching roles
+      clearMessage('user');
+      clearMessage('provider');
+      clearMessage('admin');
+    }
+
+
+    // ============================================================
+    // showMessage(role, text, type)
+    // Shows a coloured message box inside the form
+    // type = 'error' (red) | 'success' (green) | 'info' (blue)
+    // This replaces the use of alert() popups
+    // ============================================================
+    function showMessage(role, text, type) {
+      var box = document.getElementById('msg-' + role);
+      box.textContent = text;            // write the message
+      box.className = 'message ' + type; // apply colour (error/success/info)
+    }
+
+    // Clears (hides) the message box
+    function clearMessage(role) {
+      var box = document.getElementById('msg-' + role);
+      box.textContent = '';
+      box.className = 'message';         // no colour class = display:none
+    }
+
+
+    // ============================================================
+    // generateOTP(role)
+    // Called when "Generate OTP" button is clicked
+    // 1. Checks that email and password fields are filled
+    // 2. Creates a random 4-digit number using Math.random()
+    // 3. Stores it in savedOTP
+    // 4. Shows a 30-second countdown timer using setInterval()
+    // ============================================================
+    function generateOTP(role) {
+
+      var contact  = document.getElementById(role + '-contact').value.trim();
+      var password = document.getElementById(role + '-password').value.trim();
+
+      // If fields are empty, show error and stop
+      if (contact === '') {
+        showMessage(role, '⚠️ Please enter your email or phone.', 'error');
+        return;
+      }
+      if (password === '') {
+        showMessage(role, '⚠️ Please enter your password.', 'error');
+        return;
+      }
+
+      // Generate OTP:
+      // Math.random() gives a random decimal like 0.742
+      // Multiply by 9000 → 6678, add 1000 → 7678
+      // Math.floor() removes the decimal part → 7678
+      var otp = Math.floor(1000 + Math.random() * 9000);
+
+      // Save the OTP so we can check it when user submits
+      savedOTP[role].code    = otp;
+      savedOTP[role].expired = false;
+
+      // Show OTP in an info message (blue box)
+      // In a real app this would be sent via SMS or email
+      showMessage(role, 'ℹ️ Your OTP is: ' + otp + '  (Normally sent via SMS)', 'info');
+
+      // Make the OTP input box visible
+      document.getElementById(role + '-otp-box').classList.add('show');
+
+      // Clear any previously entered OTP
+      document.getElementById(role + '-otp-input').value = '';
+
+      // Disable the "Generate OTP" button while countdown is running
+      document.getElementById(role + '-otp-btn').disabled = true;
+
+      // ----- 30-SECOND COUNTDOWN TIMER -----
+      var seconds = 30;
+      var timerEl = document.getElementById(role + '-timer');
+      timerEl.textContent = '⏱ OTP expires in ' + seconds + 's';
+      timerEl.className = 'timer'; // reset to normal colour
+
+      // Stop any existing timer before starting a new one
+      if (savedOTP[role].timer) {
+        clearInterval(savedOTP[role].timer);
+      }
+
+      // setInterval runs a function every 1000ms = every 1 second
+      savedOTP[role].timer = setInterval(function() {
+        seconds = seconds - 1;
+        timerEl.textContent = '⏱ OTP expires in ' + seconds + 's';
+
+        // When countdown hits 0, OTP is no longer valid
+        if (seconds <= 0) {
+          clearInterval(savedOTP[role].timer);  // stop the timer
+          savedOTP[role].expired = true;         // mark as expired
+          savedOTP[role].code    = null;          // delete the OTP code
+          timerEl.textContent    = '❌ OTP expired';
+          timerEl.className      = 'timer expired'; // turns red
+          document.getElementById(role + '-otp-btn').disabled = false; // allow retry
+          showMessage(role, '⏰ OTP expired. Click Generate OTP again.', 'error');
+        }
+      }, 1000);
+    }
+
+
+    // ============================================================
+    // verifyOTP(role)
+    // Called when the Login button is clicked after entering OTP
+    // Compares entered OTP with the saved one
+    // Redirects to the correct dashboard on success
+    // ============================================================
+    function verifyOTP(role) {
+
+      // If OTP is expired, don't allow login
+      if (savedOTP[role].expired || savedOTP[role].code === null) {
+        showMessage(role, '⏰ OTP has expired. Please generate a new one.', 'error');
+        return;
+      }
+
+      // Get the OTP value the user typed
+      // parseInt() converts the text input to a whole number
+      var enteredOTP = parseInt(document.getElementById(role + '-otp-input').value);
+
+      // Check if the field is empty or not a number
+      if (isNaN(enteredOTP)) {
+        showMessage(role, '⚠️ Please enter the OTP.', 'error');
+        return;
+      }
+
+      // Compare the entered OTP with the saved OTP
+      if (enteredOTP === savedOTP[role].code) {
+
+        // ✅ OTP is correct
+        clearInterval(savedOTP[role].timer);  // stop the countdown
+        showMessage(role, '✅ Login successful! Redirecting...', 'success');
+
+        // Wait 1.5 seconds then redirect to the right dashboard
+        // window.location.href changes the page URL
+        setTimeout(function() {
+          if (role === 'user')     window.location.href = 'user-dashboard.html';
+          if (role === 'provider') window.location.href = 'provider-dashboard.html';
+        }, 1500);
+
+      } else {
+        // ❌ OTP does not match
+        showMessage(role, '❌ Wrong OTP. Please try again.', 'error');
+      }
+    }
+
+
+    // ============================================================
+    // adminLogin()
+    // Checks the entered username and password against fixed values
+    // Admin does not use OTP — just direct credential check
+    // ============================================================
+    function adminLogin() {
+
+      var username = document.getElementById('admin-username').value.trim();
+      var password = document.getElementById('admin-password').value.trim();
+
+      // Check that both fields are filled
+      if (username === '' || password === '') {
+        showMessage('admin', '⚠️ Please enter both username and password.', 'error');
+        return;
+      }
+
+      // Check credentials using === (strict equality)
+      if (username === ADMIN_USER && password === ADMIN_PASS) {
+        showMessage('admin', '✅ Admin verified! Redirecting...', 'success');
+        setTimeout(function() {
+          window.location.href = 'admin-dashboard.html';
+        }, 1500);
+      } else {
+        showMessage('admin', '❌ Wrong username or password.', 'error');
+      }
+    }
+
+  </script>
+
+</body>
+</html>
