@@ -427,11 +427,17 @@
       }
 
       // ── ALL VALIDATIONS PASSED ──
-      // Show success message and redirect to login after 2 seconds
-      showMessage(role, '✅ Account created successfully! Redirecting to login...', 'success');
+      // Show success message and redirect to the appropriate dashboard
+      showMessage(role, '✅ Account created successfully! Redirecting...', 'success');
 
       setTimeout(function() {
-        window.location.href = 'login.html';
+        if (role === 'user') {
+          window.location.href = 'user-dashboard.html';
+        } else if (role === 'provider') {
+          window.location.href = 'provider-dashboard.html';
+        } else {
+          window.location.href = 'login.html'; // fallback
+        }
       }, 2000);
     }
 
