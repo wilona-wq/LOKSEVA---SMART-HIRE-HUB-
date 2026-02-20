@@ -76,6 +76,24 @@
 
     .btn-logout:hover { background-color: #243580; }
 
+    /* Edit profile button */
+    .btn-edit {
+      padding: 8px 20px;
+      background-color: var(--teal);
+      color: var(--navy);
+      border: none;
+      border-radius: 50px;
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .btn-edit:hover {
+      background-color: var(--teal-dark);
+      color: white;
+    }
+
     /* ── HERO BANNER ── */
     .hero-banner {
       background-color: var(--navy);
@@ -207,6 +225,8 @@
     <a href="index.html" class="nav-logo">Lokseva</a>
     <div class="nav-right">
       <span class="nav-user">🔧 Welcome, Provider</span>
+      <!-- Link to provider edit profile -->
+      <a href="provider_profile.html" class="btn-edit">Edit Profile</a>
       <!-- Logout goes back to the landing page -->
       <a href="index.html" class="btn-logout">Logout</a>
     </div>

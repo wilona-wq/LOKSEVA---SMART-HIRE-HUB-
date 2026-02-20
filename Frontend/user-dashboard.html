@@ -79,6 +79,24 @@
       background-color: #243580;
     }
 
+    /* Edit profile button */
+    .btn-edit {
+      padding: 8px 20px;
+      background-color: var(--teal);
+      color: var(--navy);
+      border: none;
+      border-radius: 50px;
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .btn-edit:hover {
+      background-color: var(--teal-dark);
+      color: white;
+    }
+
     /* ── HERO BANNER ── */
     .hero-banner {
       background-color: var(--navy);
@@ -211,6 +229,8 @@
     <a href="index.html" class="nav-logo">Lokseva</a>
     <div class="nav-right">
       <span class="nav-user">👤 Welcome, User</span>
+      <!-- Link to edit profile -->
+      <a href="user_profile.html" class="btn-edit">Edit Profile</a>
       <!-- Logout redirects back to the landing page (index.html) -->
       <a href="index.html" class="btn-logout">Logout</a>
     </div>
