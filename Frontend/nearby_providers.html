@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Lokseva – Nearby Providers</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+
+  <style>
+    :root {
+      --navy:       #1a2757;
+      --teal:       #80cdd4;
+      --teal-dark:  #4aabb5;
+      --white:      #ffffff;
+      --light-grey: #e8edf2;
+      --text-dark:  #1a2757;
+      --text-muted: #607080;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--light-grey);
+      color: var(--text-dark);
+    }
+
+    /* ── NAVBAR ── */
+    nav {
+      background: var(--white);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 5%;
+      height: 65px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+
+    .nav-logo {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--navy);
+      text-decoration: none;
+    }
+
+    .nav-right { display: flex; align-items: center; gap: 12px; }
+
+    .btn-back {
+      padding: 8px 18px;
+      background: var(--light-grey);
+      color: var(--navy);
+      border-radius: 50px;
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .btn-logout {
+      padding: 8px 20px;
+      background: var(--navy);
+      color: white;
+      border: none;
+      border-radius: 50px;
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      background: var(--navy);
+      padding: 30px 5%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+
+    .hero-left h1 {
+      font-size: 24px;
+      font-weight: 800;
+      color: white;
+      margin-bottom: 4px;
+    }
+
+    .hero-left h1 span { color: var(--teal); }
+    .hero-left p { color: rgba(255,255,255,0.6); font-size: 14px; }
+
+    .location-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.12);
+      border: 1.5px solid rgba(255,255,255,0.22);
+      border-radius: 50px;
+      padding: 10px 20px;
+      color: white;
+      font-size: 13px;
+      font-weight: 700;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .location-btn:hover { background: rgba(255,255,255,0.22); }
+
+    /* ── CATEGORY PILLS ── */
+    .cat-bar {
+      background: var(--white);
+      padding: 14px 5%;
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      border-bottom: 1px solid var(--light-grey);
+    }
+
+    .cat-bar::-webkit-scrollbar { display: none; }
+
+    .cat-pill {
+      flex-shrink: 0;
+      padding: 9px 18px;
+      border-radius: 50px;
+      border: 2px solid var(--light-grey);
+      background: var(--light-grey);
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.18s;
+      white-space: nowrap;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    .cat-pill:hover { border-color: var(--teal); color: var(--navy); }
+
+    .cat-pill.active {
+      background: var(--navy);
+      border-color: var(--navy);
+      color: white;
+    }
+
+    /* ── MAIN SPLIT LAYOUT ── */
+    .split {
+      display: grid;
+      grid-template-columns: 400px 1fr;
+      height: calc(100vh - 178px);
+    }
+
+    /* ── LEFT PANEL ── */
+    .left-panel {
+      background: var(--white);
+      display: flex;
+      flex-direction: column;
+      border-right: 2px solid var(--light-grey);
+      overflow: hidden;
+    }
+
+    /* search + sort row */
+    .controls {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--light-grey);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .search-box {
+      position: relative;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 10px 16px 10px 38px;
+      border: 2px solid var(--light-grey);
+      border-radius: 50px;
+      font-size: 13px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      color: var(--text-dark);
+      background: var(--light-grey);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .search-box input:focus { border-color: var(--teal-dark); background: white; }
+
+    .search-icon {
+      position: absolute;
+      left: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .sort-filter {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .sort-select {
+      flex: 1;
+      padding: 8px 14px;
+      border: 2px solid var(--light-grey);
+      border-radius: 50px;
+      font-size: 12px;
+      font-weight: 700;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      color: var(--text-muted);
+      background: var(--light-grey);
+      outline: none;
+      cursor: pointer;
+    }
+
+    .filter-available {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: 50px;
+      border: 2px solid var(--light-grey);
+      background: var(--light-grey);
+      font-size: 12px;
+      font-weight: 700;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      color: var(--text-muted);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.15s;
+      user-select: none;
+    }
+
+    .filter-available.on {
+      background: #dcfce7;
+      border-color: #22c55e;
+      color: #15803d;
+    }
+
+    /* count bar */
+    .count-bar {
+      padding: 10px 16px 2px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    /* scrollable list */
+    .cards-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* ── PROVIDER CARD ── */
+    .p-card {
+      border: 2px solid var(--light-grey);
+      border-radius: 16px;
+      padding: 14px;
+      cursor: pointer;
+      transition: all 0.18s;
+      position: relative;
+      background: white;
+    }
+
+    .p-card:hover { border-color: var(--teal); box-shadow: 0 4px 16px rgba(74,171,181,0.15); }
+    .p-card.selected { border-color: var(--teal-dark); background: rgba(74,171,181,0.06); box-shadow: 0 4px 18px rgba(74,171,181,0.2); }
+
+    /* availability dot */
+    .avail-dot {
+      position: absolute;
+      top: 13px; right: 13px;
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      border: 2px solid white;
+    }
+    .avail-dot.yes { background: #22c55e; }
+    .avail-dot.no  { background: #f59e0b; }
+
+    .card-row1 {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      margin-bottom: 10px;
+    }
+
+    .avatar {
+      width: 46px; height: 46px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; font-weight: 800; color: white;
+      flex-shrink: 0;
+    }
+
+    .p-name { font-size: 14px; font-weight: 700; color: var(--navy); }
+    .p-meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+    .rating-badge {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--navy);
+      flex-shrink: 0;
+    }
+
+    .rating-badge small { font-size: 11px; font-weight: 500; color: var(--text-muted); }
+
+    /* rating bar visual */
+    .rating-bar-wrap {
+      margin-bottom: 9px;
+    }
+
+    .rating-bar-bg {
+      height: 5px;
+      border-radius: 10px;
+      background: var(--light-grey);
+      overflow: hidden;
+    }
+
+    .rating-bar-fill {
+      height: 100%;
+      border-radius: 10px;
+      background: linear-gradient(90deg, var(--teal-dark), var(--navy));
+      transition: width 0.4s ease;
+    }
+
+    .chips-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 11px;
+    }
+
+    .chip {
+      padding: 4px 10px;
+      border-radius: 50px;
+      background: var(--light-grey);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .chip.green  { background: #dcfce7; color: #15803d; }
+    .chip.yellow { background: #fef9c3; color: #854d0e; }
+    .chip.blue   { background: #dbeafe; color: #1d4ed8; }
+
+    .btn-book {
+      width: 100%;
+      padding: 10px;
+      background: linear-gradient(135deg, var(--teal-dark), var(--navy));
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+
+    .btn-book:hover { opacity: 0.88; }
+
+    /* empty state */
+    .empty {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 50px 20px;
+      text-align: center;
+    }
+
+    .empty .e-icon { font-size: 46px; }
+    .empty p { font-size: 14px; font-weight: 700; color: var(--text-muted); }
+    .empty span { font-size: 12px; color: #a0b0c0; }
+
+    /* ── RIGHT MAP ── */
+    #map { width: 100%; height: 100%; }
+
+    /* ── MOBILE TOGGLE ── */
+    .mob-toggle {
+      display: none;
+      position: fixed;
+      bottom: 22px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--navy);
+      color: white;
+      border: none;
+      border-radius: 50px;
+      padding: 12px 28px;
+      font-size: 14px;
+      font-weight: 700;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      cursor: pointer;
+      z-index: 999;
+      box-shadow: 0 4px 20px rgba(26,39,87,0.35);
+    }
+
+    @media (max-width: 768px) {
+      .split { grid-template-columns: 1fr; }
+      #map { display: none; height: 60vh; }
+      .left-panel { height: calc(100vh - 178px); }
+      .mob-toggle { display: block; }
+      .split.map-mode #map { display: block; }
+      .split.map-mode .left-panel { display: none; }
+    }
+
+    /* ── BOOKING MODAL ── */
+    .overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(26,39,87,0.5);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(4px);
+    }
+
+    .overlay.open { display: flex; }
+
+    .modal {
+      background: white;
+      border-radius: 24px;
+      padding: 30px;
+      width: 430px;
+      max-width: 93vw;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.22);
+      animation: popIn 0.2s ease;
+    }
+
+    @keyframes popIn {
+      from { transform: scale(0.9); opacity: 0; }
+      to   { transform: scale(1);   opacity: 1; }
+    }
+
+    .modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+
+    .modal-head h2 { font-size: 18px; font-weight: 800; color: var(--navy); }
+
+    .modal-close {
+      width: 32px; height: 32px;
+      border: none; border-radius: 50%;
+      background: var(--light-grey);
+      font-size: 15px;
+      cursor: pointer;
+      color: var(--text-muted);
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .modal-provider {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      background: var(--light-grey);
+      border-radius: 14px;
+      padding: 13px;
+      margin-bottom: 18px;
+    }
+
+    .modal-avatar {
+      width: 50px; height: 50px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; font-weight: 800; color: white;
+      flex-shrink: 0;
+    }
+
+    .modal-pname { font-size: 15px; font-weight: 700; color: var(--navy); }
+    .modal-psub  { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+    .modal label {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+
+    .modal input,
+    .modal select,
+    .modal textarea {
+      width: 100%;
+      padding: 11px 15px;
+      border: 2px solid var(--light-grey);
+      border-radius: 12px;
+      font-size: 13px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      color: var(--text-dark);
+      background: #fafbfd;
+      outline: none;
+      margin-bottom: 13px;
+      transition: border-color 0.18s;
+    }
+
+    .modal input:focus,
+    .modal select:focus,
+    .modal textarea:focus { border-color: var(--teal-dark); }
+
+    .modal textarea { resize: none; min-height: 65px; }
+
+    .modal-err {
+      display: none;
+      background: #fde8e8;
+      color: #b91c1c;
+      border: 1px solid #f5a5a5;
+      border-radius: 10px;
+      padding: 9px 13px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .modal-err.show { display: block; }
+
+    .modal-btns { display: flex; gap: 10px; }
+
+    .btn-cancel-modal {
+      flex: 1;
+      padding: 12px;
+      background: var(--light-grey);
+      color: var(--text-dark);
+      border: none; border-radius: 12px;
+      font-size: 13px; font-weight: 700;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      cursor: pointer;
+    }
+
+    .btn-confirm-modal {
+      flex: 2;
+      padding: 12px;
+      background: linear-gradient(135deg, var(--teal-dark), var(--navy));
+      color: white;
+      border: none; border-radius: 12px;
+      font-size: 13px; font-weight: 700;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      cursor: pointer;
+    }
+
+    .btn-confirm-modal:hover { opacity: 0.9; }
+
+    /* success screen */
+    .success-screen {
+      display: none;
+      text-align: center;
+      padding: 8px 0;
+    }
+
+    .success-screen .s-icon { font-size: 58px; margin-bottom: 12px; animation: bounce 0.4s ease; }
+
+    @keyframes bounce {
+      0%  { transform: scale(0); }
+      70% { transform: scale(1.15); }
+      100%{ transform: scale(1); }
+    }
+
+    .success-screen h3 { font-size: 20px; font-weight: 800; color: var(--navy); margin-bottom: 8px; }
+    .success-screen p  { font-size: 13px; color: var(--text-muted); line-height: 1.65; }
+
+    .btn-done {
+      margin-top: 20px;
+      width: 100%;
+      padding: 13px;
+      background: var(--navy);
+      color: white;
+      border: none; border-radius: 12px;
+      font-size: 14px; font-weight: 700;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<nav>
+  <a href="index.html" class="nav-logo">Lokseva</a>
+  <div class="nav-right">
+    <a href="user-dashboard.html" class="btn-back">← Dashboard</a>
+    <a href="index.html" class="btn-logout">Logout</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-left">
+    <h1 id="hero-title">⚡ <span id="hero-label">Electricians</span> Near You</h1>
+    <p id="hero-sub">Verified providers sorted by rating in your area</p>
+  </div>
+  <button class="location-btn" onclick="detectLocation()">
+    📍 <span id="loc-text">Andheri West, Mumbai</span> ▾
+  </button>
+</div>
+
+<!-- CATEGORY PILLS -->
+<div class="cat-bar">
+  <div class="cat-pill active" data-svc="electrician" onclick="switchCat(this)">⚡ Electrician</div>
+  <div class="cat-pill" data-svc="plumber"     onclick="switchCat(this)">🔧 Plumber</div>
+  <div class="cat-pill" data-svc="cleaner"     onclick="switchCat(this)">🧹 Cleaner</div>
+  <div class="cat-pill" data-svc="chef"        onclick="switchCat(this)">👨‍🍳 Chef</div>
+  <div class="cat-pill" data-svc="carpenter"   onclick="switchCat(this)">🪚 Carpenter</div>
+  <div class="cat-pill" data-svc="painter"     onclick="switchCat(this)">🖌️ Painter</div>
+  <div class="cat-pill" data-svc="locksmith"   onclick="switchCat(this)">🔒 Locksmith</div>
+  <div class="cat-pill" data-svc="ac"          onclick="switchCat(this)">❄️ AC Repair</div>
+</div>
+
+<!-- SPLIT: LIST + MAP -->
+<div class="split" id="split">
+
+  <!-- LEFT: PROVIDER LIST -->
+  <div class="left-panel">
+
+    <div class="controls">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="search" placeholder="Search by name or area…" oninput="doSearch(this.value)"/>
+      </div>
+      <div class="sort-filter">
+        <select class="sort-select" onchange="doSort(this.value)">
+          <option value="rating">⭐ Top Rated</option>
+          <option value="distance">📍 Nearest First</option>
+          <option value="price_asc">💰 Price: Low to High</option>
+          <option value="price_desc">💰 Price: High to Low</option>
+          <option value="jobs">💼 Most Experienced</option>
+        </select>
+        <div class="filter-available" id="avail-toggle" onclick="toggleAvail()">
+          🟢 Available Only
+        </div>
+      </div>
+    </div>
+
+    <div class="count-bar" id="count-bar">Loading…</div>
+
+    <div class="cards-list" id="cards-list"></div>
+
+    <div class="empty" id="empty-state">
+      <div class="e-icon">🔍</div>
+      <p>No providers found</p>
+      <span>Try a different filter or category</span>
+    </div>
+
+  </div>
+
+  <!-- RIGHT: MAP -->
+  <div id="map"></div>
+
+</div>
+
+<!-- MOBILE TOGGLE -->
+<button class="mob-toggle" id="mob-toggle" onclick="mobToggle()">🗺️ Map View</button>
+
+<!-- BOOKING MODAL -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+
+    <!-- form -->
+    <div id="modal-form">
+      <div class="modal-head">
+        <h2>Book Service</h2>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+
+      <div class="modal-provider">
+        <div class="modal-avatar" id="m-avatar"></div>
+        <div>
+          <div class="modal-pname" id="m-name">–</div>
+          <div class="modal-psub"  id="m-sub">–</div>
+        </div>
+      </div>
+
+      <label>Date</label>
+      <input type="date" id="b-date"/>
+
+      <label>Time Slot</label>
+      <select id="b-slot">
+        <option value="">Choose a slot</option>
+        <option>8:00 AM – 10:00 AM</option>
+        <option>10:00 AM – 12:00 PM</option>
+        <option>12:00 PM – 2:00 PM</option>
+        <option>2:00 PM – 4:00 PM</option>
+        <option>4:00 PM – 6:00 PM</option>
+        <option>6:00 PM – 8:00 PM</option>
+      </select>
+
+      <label>Your Address</label>
+      <input type="text" id="b-addr" placeholder="Enter your full address" value="42 Shastri Nagar, Andheri West"/>
+
+      <label>Problem Description (optional)</label>
+      <textarea id="b-note" placeholder="Describe what needs to be done…"></textarea>
+
+      <div class="modal-err" id="m-err"></div>
+
+      <div class="modal-btns">
+        <button class="btn-cancel-modal" onclick="closeModal()">Cancel</button>
+        <button class="btn-confirm-modal" onclick="confirmBook()">✅ Confirm Booking</button>
+      </div>
+    </div>
+
+    <!-- success -->
+    <div class="success-screen" id="success-screen">
+      <div class="s-icon">🎉</div>
+      <h3>Booking Confirmed!</h3>
+      <p id="success-txt"></p>
+      <button class="btn-done" onclick="closeModal()">Back to Providers</button>
+    </div>
+
+  </div>
+</div>
+
+
+<script>
+// ─────────────────────────────────────────────
+// DATA
+// ─────────────────────────────────────────────
+var DATA = {
+  electrician: [
+    { id:1,  name:'Rajan Sharma',   init:'RS', color:'#1a2757', area:'Andheri West',  dist:0.8, rating:4.9, jobs:142, rate:450, avail:true,  exp:8  },
+    { id:2,  name:'Pramod Tiwari',  init:'PT', color:'#1a7a7a', area:'Vile Parle',    dist:2.8, rating:4.8, jobs:110, rate:500, avail:true,  exp:7  },
+    { id:3,  name:'Deepak Nair',    init:'DN', color:'#4aabb5', area:'Andheri East',  dist:1.4, rating:4.7, jobs:98,  rate:400, avail:true,  exp:5  },
+    { id:4,  name:'Ramesh Yadav',   init:'RY', color:'#205080', area:'Malad West',    dist:4.2, rating:4.6, jobs:87,  rate:420, avail:true,  exp:6  },
+    { id:5,  name:'Mohan Das',      init:'MD', color:'#607080', area:'Jogeshwari',    dist:2.1, rating:4.5, jobs:74,  rate:380, avail:false, exp:4  },
+    { id:6,  name:'Sunil Ghosh',    init:'SG', color:'#804020', area:'Goregaon',      dist:3.5, rating:4.3, jobs:55,  rate:350, avail:false, exp:3  },
+  ],
+  plumber: [
+    { id:7,  name:'Ajay Kumar',     init:'AK', color:'#1a2757', area:'Bandra East',   dist:0.6, rating:4.8, jobs:120, rate:400, avail:true,  exp:7  },
+    { id:8,  name:'Nilesh Raut',    init:'NR', color:'#1a7a7a', area:'Dadar',          dist:3.1, rating:4.6, jobs:95,  rate:440, avail:true,  exp:6  },
+    { id:9,  name:'Vishal Patil',   init:'VP', color:'#4aabb5', area:'Bandra West',   dist:1.2, rating:4.5, jobs:80,  rate:360, avail:true,  exp:4  },
+    { id:10, name:'Santosh More',   init:'SM', color:'#607080', area:'Khar',           dist:2.0, rating:4.2, jobs:60,  rate:320, avail:false, exp:3  },
+  ],
+  cleaner: [
+    { id:11, name:'Priya Devi',     init:'PD', color:'#4aabb5', area:'Andheri West',  dist:0.5, rating:4.9, jobs:200, rate:300, avail:true,  exp:5  },
+    { id:12, name:'Kavita Singh',   init:'KS', color:'#1a2757', area:'Lokhandwala',   dist:1.1, rating:4.7, jobs:165, rate:280, avail:true,  exp:4  },
+    { id:13, name:'Meera Joshi',    init:'MJ', color:'#205080', area:'4 Bunglows',    dist:3.0, rating:4.6, jobs:130, rate:290, avail:true,  exp:5  },
+    { id:14, name:'Sunita Bai',     init:'SB', color:'#804020', area:'Versova',        dist:2.3, rating:4.4, jobs:90,  rate:250, avail:false, exp:3  },
+  ],
+  chef: [
+    { id:15, name:'Chef Prasad',    init:'CP', color:'#804020', area:'Vile Parle',    dist:3.0, rating:4.9, jobs:105, rate:900, avail:true,  exp:12 },
+    { id:16, name:'Arjun Nair',     init:'AN', color:'#1a7a7a', area:'Juhu',           dist:1.5, rating:4.8, jobs:88,  rate:800, avail:true,  exp:10 },
+    { id:17, name:'Ritu Mehta',     init:'RM', color:'#4aabb5', area:'Santacruz',     dist:2.2, rating:4.6, jobs:72,  rate:700, avail:false, exp:8  },
+  ],
+  carpenter: [
+    { id:18, name:'Vikram Singh',   init:'VS', color:'#1a2757', area:'Kurla West',    dist:1.8, rating:4.7, jobs:95,  rate:500, avail:true,  exp:9  },
+    { id:19, name:'Anil Verma',     init:'AV', color:'#607080', area:'Chembur',       dist:3.4, rating:4.5, jobs:80,  rate:480, avail:true,  exp:6  },
+    { id:20, name:'Ganesh Kamble',  init:'GK', color:'#1a7a7a', area:'Ghatkopar',     dist:2.6, rating:4.4, jobs:68,  rate:450, avail:false, exp:5  },
+  ],
+  painter: [
+    { id:21, name:'Mahesh Tiwari',  init:'MT', color:'#1a2757', area:'Matunga',       dist:2.5, rating:4.6, jobs:90,  rate:420, avail:true,  exp:7  },
+    { id:22, name:'Suresh Yadav',   init:'SY', color:'#607080', area:'Dadar',          dist:0.9, rating:4.5, jobs:70,  rate:400, avail:false, exp:4  },
+    { id:23, name:'Raju Patel',     init:'RP', color:'#804020', area:'Sion',           dist:1.7, rating:4.3, jobs:55,  rate:350, avail:true,  exp:3  },
+  ],
+  locksmith: [
+    { id:24, name:'Farhan Khan',    init:'FK', color:'#1a7a7a', area:'Andheri',        dist:1.0, rating:4.8, jobs:115, rate:350, avail:true,  exp:6  },
+    { id:25, name:'Babu Shaikh',    init:'BS', color:'#4aabb5', area:'Jogeshwari',    dist:2.0, rating:4.5, jobs:80,  rate:300, avail:true,  exp:4  },
+  ],
+  ac: [
+    { id:26, name:'Arun Sharma',    init:'AS', color:'#4aabb5', area:'Bandra',        dist:3.0, rating:4.8, jobs:130, rate:650, avail:true,  exp:9  },
+    { id:27, name:'Rajiv Nair',     init:'RN', color:'#205080', area:'Vile Parle',    dist:1.3, rating:4.7, jobs:100, rate:600, avail:true,  exp:8  },
+    { id:28, name:'Sanjay Gupta',   init:'SG', color:'#1a2757', area:'Santacruz',     dist:2.1, rating:4.5, jobs:78,  rate:550, avail:false, exp:5  },
+  ]
+};
+
+var META = {
+  electrician: { label:'Electricians', emoji:'⚡' },
+  plumber:     { label:'Plumbers',     emoji:'🔧' },
+  cleaner:     { label:'Cleaners',     emoji:'🧹' },
+  chef:        { label:'Chefs',        emoji:'👨‍🍳' },
+  carpenter:   { label:'Carpenters',   emoji:'🪚' },
+  painter:     { label:'Painters',     emoji:'🖌️' },
+  locksmith:   { label:'Locksmiths',   emoji:'🔒' },
+  ac:          { label:'AC Repair',    emoji:'❄️' },
+};
+
+// Mumbai area offsets for map pins
+var OFFSETS = [
+  [0.009,-0.006],[-0.005,0.013],[0.016,0.009],[-0.013,-0.011],
+  [0.006,0.019],[-0.019,0.004],[0.021,-0.013],[-0.009,0.021],
+  [0.013,-0.019],[-0.016,0.016],[0.003,-0.023],[0.019,0.013],
+  [-0.011,-0.019],[0.026,0.006],[-0.021,-0.009]
+];
+
+// ─────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────
+var curSvc    = 'electrician';
+var curSort   = 'rating';
+var curSearch = '';
+var availOnly = false;
+var selId     = null;
+var bookP     = null;
+var map, mapMarkers = [];
+var BASE = [19.1364, 72.8296];
+
+// ─────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', function () {
+  // honour ?service= param if coming from dashboard
+  var p = new URLSearchParams(window.location.search);
+  var s = p.get('service');
+  if (s && DATA[s]) {
+    curSvc = s;
+    document.querySelectorAll('.cat-pill').forEach(function (el) {
+      el.classList.toggle('active', el.dataset.svc === s);
+    });
+  }
+
+  initMap();
+  render();
+
+  var today = new Date().toISOString().split('T')[0];
+  document.getElementById('b-date').min   = today;
+  document.getElementById('b-date').value = today;
+});
+
+// ─────────────────────────────────────────────
+// MAP
+// ─────────────────────────────────────────────
+function initMap() {
+  map = L.map('map', { zoomControl: true }).setView(BASE, 14);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap'
+  }).addTo(map);
+
+  // "You" marker
+  L.circleMarker(BASE, {
+    radius: 10, fillColor: '#1a2757',
+    color: 'white', weight: 3, fillOpacity: 1
+  }).addTo(map).bindPopup('<b>📍 You are here</b>');
+}
+
+function refreshMapMarkers(list) {
+  mapMarkers.forEach(function (m) { map.removeLayer(m); });
+  mapMarkers = [];
+
+  list.forEach(function (p, i) {
+    var off = OFFSETS[i % OFFSETS.length];
+    var lat = BASE[0] + off[0];
+    var lng = BASE[1] + off[1];
+    p._lat = lat; p._lng = lng;
+
+    var icon = L.divIcon({
+      className: '',
+      html: '<div style="background:' + p.color + ';color:white;padding:5px 10px;border-radius:50px;' +
+            'font-size:11px;font-weight:700;font-family:sans-serif;white-space:nowrap;' +
+            'box-shadow:0 3px 10px rgba(0,0,0,0.25);border:2px solid white;line-height:1.4;">' +
+            META[curSvc].emoji + ' ' + p.name.split(' ')[0] +
+            '<br><span style="font-size:10px;">⭐' + p.rating + (p.avail ? ' 🟢' : ' 🟡') + '</span></div>',
+      iconAnchor: [38, 0]
+    });
+
+    var mk = L.marker([lat, lng], { icon: icon }).addTo(map);
+    mk.bindPopup(
+      '<b>' + p.name + '</b><br>' +
+      META[curSvc].emoji + ' ' + p.area + '<br>' +
+      '⭐ ' + p.rating + ' &nbsp;|&nbsp; ₹' + p.rate + '/hr<br>' +
+      '<button onclick="openBook(' + p.id + ')" style="margin-top:7px;padding:6px 14px;' +
+      'background:#1a2757;color:white;border:none;border-radius:50px;font-size:12px;' +
+      'font-weight:700;cursor:pointer;">Book Now</button>'
+    );
+    mk.on('click', function () { highlightCard(p); });
+    mapMarkers.push(mk);
+  });
+}
+
+// ─────────────────────────────────────────────
+// RENDER
+// ─────────────────────────────────────────────
+function render() {
+  var m = META[curSvc];
+  document.getElementById('hero-label').textContent = m.label;
+  document.getElementById('hero-title').childNodes[0].textContent = m.emoji + ' ';
+
+  var list = filtered();
+  document.getElementById('count-bar').textContent =
+    list.length + ' provider' + (list.length !== 1 ? 's' : '') + ' found near you';
+
+  var container = document.getElementById('cards-list');
+  var emptyEl   = document.getElementById('empty-state');
+  container.innerHTML = '';
+
+  if (list.length === 0) {
+    emptyEl.style.display = 'flex';
+    container.style.display = 'none';
+    refreshMapMarkers([]);
+    return;
+  }
+
+  emptyEl.style.display = 'none';
+  container.style.display = 'flex';
+
+  list.forEach(function (p) {
+    var barPct = ((p.rating - 3) / 2 * 100).toFixed(0); // 3.0→0%, 5.0→100%
+    var card = document.createElement('div');
+    card.className = 'p-card' + (p.id === selId ? ' selected' : '');
+    card.id = 'card-' + p.id;
+    card.onclick = function () { highlightCard(p); };
+
+    card.innerHTML =
+      '<div class="avail-dot ' + (p.avail ? 'yes' : 'no') + '"></div>' +
+
+      '<div class="card-row1">' +
+        '<div class="avatar" style="background:' + p.color + '">' + p.init + '</div>' +
+        '<div>' +
+          '<div class="p-name">' + p.name + '</div>' +
+          '<div class="p-meta">' + m.emoji + ' ' + p.area + ' &nbsp;•&nbsp; ' + p.exp + ' yrs exp</div>' +
+        '</div>' +
+        '<div class="rating-badge">⭐ ' + p.rating + ' <small>(' + p.jobs + ')</small></div>' +
+      '</div>' +
+
+      '<div class="rating-bar-wrap">' +
+        '<div class="rating-bar-bg"><div class="rating-bar-fill" style="width:' + barPct + '%"></div></div>' +
+      '</div>' +
+
+      '<div class="chips-row">' +
+        '<span class="chip">📍 ' + p.dist + ' km</span>' +
+        '<span class="chip blue">₹' + p.rate + '/hr</span>' +
+        '<span class="chip ' + (p.avail ? 'green' : 'yellow') + '">' +
+          (p.avail ? '🟢 Available' : '🟡 Busy') + '</span>' +
+      '</div>' +
+
+      '<button class="btn-book" onclick="event.stopPropagation(); openBook(' + p.id + ')">Book Now →</button>';
+
+    container.appendChild(card);
+  });
+
+  refreshMapMarkers(list);
+}
+
+function filtered() {
+  var list = (DATA[curSvc] || []).slice();
+  if (availOnly) list = list.filter(function (p) { return p.avail; });
+  if (curSearch) {
+    var q = curSearch.toLowerCase();
+    list = list.filter(function (p) {
+      return p.name.toLowerCase().includes(q) || p.area.toLowerCase().includes(q);
+    });
+  }
+  list.sort(function (a, b) {
+    if (curSort === 'distance')   return a.dist - b.dist;
+    if (curSort === 'price_asc')  return a.rate - b.rate;
+    if (curSort === 'price_desc') return b.rate - a.rate;
+    if (curSort === 'jobs')       return b.exp - a.exp;
+    return b.rating - a.rating; // default: rating
+  });
+  return list;
+}
+
+// ─────────────────────────────────────────────
+// EVENTS
+// ─────────────────────────────────────────────
+function switchCat(el) {
+  document.querySelectorAll('.cat-pill').forEach(function (p) { p.classList.remove('active'); });
+  el.classList.add('active');
+  curSvc = el.dataset.svc;
+  selId  = null;
+  render();
+}
+
+function doSort(val)   { curSort   = val; render(); }
+function doSearch(val) { curSearch = val; render(); }
+
+function toggleAvail() {
+  availOnly = !availOnly;
+  document.getElementById('avail-toggle').classList.toggle('on', availOnly);
+  render();
+}
+
+function highlightCard(p) {
+  selId = p.id;
+  document.querySelectorAll('.p-card').forEach(function (c) { c.classList.remove('selected'); });
+  var el = document.getElementById('card-' + p.id);
+  if (el) { el.classList.add('selected'); el.scrollIntoView({ behavior:'smooth', block:'nearest' }); }
+  if (p._lat && map) map.flyTo([p._lat, p._lng], 15, { duration: 0.7 });
+}
+
+function detectLocation() {
+  if (!navigator.geolocation) return;
+  document.getElementById('loc-text').textContent = 'Detecting…';
+  navigator.geolocation.getCurrentPosition(
+    function (pos) {
+      document.getElementById('loc-text').textContent = 'Your Location ✓';
+      map.flyTo([pos.coords.latitude, pos.coords.longitude], 14);
+    },
+    function () { document.getElementById('loc-text').textContent = 'Andheri West, Mumbai'; }
+  );
+}
+
+// mobile map/list toggle
+var mapShown = false;
+function mobToggle() {
+  mapShown = !mapShown;
+  var s = document.getElementById('split');
+  var b = document.getElementById('mob-toggle');
+  s.classList.toggle('map-mode', mapShown);
+  b.textContent = mapShown ? '📋 List View' : '🗺️ Map View';
+  if (mapShown) setTimeout(function () { map.invalidateSize(); }, 100);
+}
+
+// ─────────────────────────────────────────────
+// BOOKING MODAL
+// ─────────────────────────────────────────────
+function openBook(id) {
+  var all = [];
+  Object.values(DATA).forEach(function (arr) { all = all.concat(arr); });
+  var p = all.find(function (x) { return x.id === id; });
+  if (!p) return;
+  bookP = p;
+
+  document.getElementById('m-avatar').style.background = p.color;
+  document.getElementById('m-avatar').textContent = p.init;
+  document.getElementById('m-name').textContent   = p.name;
+  document.getElementById('m-sub').textContent    =
+    META[curSvc].emoji + ' ' + META[curSvc].label.replace(/s$/, '') +
+    ' • ⭐ ' + p.rating + ' • ₹' + p.rate + '/hr';
+
+  document.getElementById('modal-form').style.display    = 'block';
+  document.getElementById('success-screen').style.display = 'none';
+  document.getElementById('b-slot').value = '';
+  document.getElementById('b-note').value = '';
+  var err = document.getElementById('m-err');
+  err.textContent = ''; err.classList.remove('show');
+
+  document.getElementById('overlay').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('overlay').classList.remove('open');
+}
+
+function confirmBook() {
+  var date = document.getElementById('b-date').value;
+  var slot = document.getElementById('b-slot').value;
+  var addr = document.getElementById('b-addr').value.trim();
+  var err  = document.getElementById('m-err');
+
+  if (!date || !slot || !addr) {
+    err.textContent = '⚠️ Please fill in date, time slot and address.';
+    err.classList.add('show');
+    return;
+  }
+
+  err.classList.remove('show');
+  document.getElementById('modal-form').style.display     = 'none';
+  document.getElementById('success-screen').style.display = 'block';
+  document.getElementById('success-txt').innerHTML =
+    '<b>' + bookP.name + '</b> has been booked<br>for <b>' + slot + '</b> on <b>' + date + '</b>.<br>' +
+    'You will receive a confirmation shortly.';
+}
+
+document.getElementById('overlay').addEventListener('click', function (e) {
+  if (e.target === this) closeModal();
+});
+</script>
+
+</body>
+</html>
