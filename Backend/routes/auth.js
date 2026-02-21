@@ -72,7 +72,7 @@ router.post('/register', async (req, res) => {
       existing.otp  = otp;  existing.otpExpiry = otpExpiry;
       await existing.save();
     } else {
-      await User.create({ name, email, phone, password: hashedPassword, role, otp, otpExpiry, isVerified: false });
+      await User.create({ name, email, phone, password: hashedPassword, role, otp, otpExpiry, isVerified: false, status: 'active' });
     }
 
     await sendOTPEmail(email, otp);
@@ -89,16 +89,17 @@ router.post('/verify-otp', async (req, res) => {
     const { email, otp } = req.body;
     const user = await User.findOne({ email });
 
-    if (!user)                    return res.json({ success: false, message: 'User not found.' });
+    if (!user)                       return res.json({ success: false, message: 'User not found.' });
     if (new Date() > user.otpExpiry) return res.json({ success: false, message: 'OTP expired.' });
-    if (user.otp !== otp)         return res.json({ success: false, message: 'Incorrect OTP.' });
+    if (user.otp !== otp)            return res.json({ success: false, message: 'Incorrect OTP.' });
 
     user.isVerified = true;
-    user.otp = null;
-    user.otpExpiry = null;
+    user.otp        = null;
+    user.otpExpiry  = null;
     await user.save();
 
-    res.json({ success: true, message: 'Email verified! You can now login.' });
+    // Send role back so frontend redirects correctly
+    res.json({ success: true, message: 'Email verified!', role: user.role });
   } catch (err) {
     res.json({ success: false, message: 'Server error.' });
   }
@@ -131,9 +132,10 @@ router.post('/login', async (req, res) => {
     const { email, password, role } = req.body;
 
     const user = await User.findOne({ email });
-    if (!user)             return res.json({ success: false, message: 'Email not registered.' });
+    if (!user)              return res.json({ success: false, message: 'Email not registered.' });
     if (user.role !== role) return res.json({ success: false, message: `No ${role} account found.` });
-    if (!user.isVerified)  return res.json({ success: false, message: 'Please verify your email first.' });
+    if (!user.isVerified)   return res.json({ success: false, message: 'Please verify your email first.' });
+    if (user.status === 'blocked') return res.json({ success: false, message: 'Your account has been blocked. Contact admin.' });
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.json({ success: false, message: 'Incorrect password.' });
@@ -142,7 +144,7 @@ router.post('/login', async (req, res) => {
     req.session.role   = user.role;
     req.session.name   = user.name;
 
-    res.json({ success: true, role: user.role, name: user.name });
+    res.json({ success: true, role: user.role, name: user.name, userId: user._id });
   } catch (err) {
     res.json({ success: false, message: 'Server error.' });
   }
@@ -158,9 +160,34 @@ router.get('/logout', (req, res) => {
 // ── CHECK SESSION ──
 router.get('/me', (req, res) => {
   if (req.session.userId)
-    res.json({ loggedIn: true, name: req.session.name, role: req.session.role });
+    res.json({ loggedIn: true, name: req.session.name, role: req.session.role, userId: req.session.userId });
   else
     res.json({ loggedIn: false });
+});
+
+// ── GET ALL USERS (Admin) ──
+router.get('/all-users', async (req, res) => {
+  try {
+    const users = await User.find({}, 'name email role status isVerified createdAt');
+    res.json({ success: true, users });
+  } catch (err) {
+    res.json({ success: false, message: err.message });
+  }
+});
+
+// ── BLOCK / UNBLOCK USER (Admin) ──
+router.put('/block/:userId', async (req, res) => {
+  try {
+    const { status } = req.body;
+    const user = await User.findByIdAndUpdate(
+      req.params.userId,
+      { status },
+      { new: true }
+    );
+    res.json({ success: true, user });
+  } catch (err) {
+    res.json({ success: false, message: err.message });
+  }
 });
 
 module.exports = router;
