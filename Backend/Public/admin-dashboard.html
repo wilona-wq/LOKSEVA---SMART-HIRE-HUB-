@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Lokseva - Admin Dashboard</title>
+
+  <style>
+
+    /* Same colour variables as the rest of the project */
+    :root {
+      --sky-blue:   #5aace0;
+      --navy:       #1a2757;
+      --teal:       #80cdd4;
+      --teal-dark:  #4aabb5;
+      --white:      #ffffff;
+      --light-grey: #e8edf2;
+      --text-dark:  #1a2757;
+      --text-muted: #607080;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: Arial, sans-serif;
+      background-color: var(--light-grey);
+      color: var(--text-dark);
+    }
+
+    /* ── NAVBAR ── */
+    nav {
+      background-color: var(--white);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 5%;
+      height: 65px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .nav-logo {
+      font-size: 22px;
+      font-weight: bold;
+      color: var(--navy);
+      text-decoration: none;
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .nav-user {
+      font-size: 14px;
+      font-weight: bold;
+      color: var(--text-muted);
+    }
+
+    /* Logout button goes back to landing page */
+    .btn-logout {
+      padding: 8px 20px;
+      background-color: var(--navy);
+      color: white;
+      border: none;
+      border-radius: 50px;
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .btn-logout:hover { background-color: #243580; }
+
+    /* ── HERO BANNER ── */
+    .hero-banner {
+      background-color: var(--navy);
+      padding: 40px 5%;
+      color: white;
+    }
+
+    .hero-banner h1 { font-size: 28px; margin-bottom: 8px; }
+    .hero-banner h1 span { color: var(--teal); }
+    .hero-banner p { color: rgba(255,255,255,0.7); font-size: 15px; }
+
+    /* ── MAIN CONTENT ── */
+    .main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 40px 5%;
+    }
+
+    .section-title {
+      font-size: 20px;
+      font-weight: bold;
+      color: var(--navy);
+      margin-bottom: 20px;
+    }
+
+    /* ── STATS ROW ── */
+    /* Platform-wide summary for admin */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 40px;
+    }
+
+    .stat-card {
+      background-color: var(--white);
+      border-radius: 14px;
+      padding: 22px 18px;
+      text-align: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    }
+
+    .stat-icon { font-size: 28px; margin-bottom: 8px; }
+    .stat-num  { font-size: 26px; font-weight: bold; color: var(--navy); }
+    .stat-lbl  { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+    /* ── USERS AND PROVIDERS TABLE ── */
+    .data-table {
+      width: 100%;
+      background-color: var(--white);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+      margin-bottom: 40px;
+    }
+
+    .data-table table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .data-table th {
+      background-color: var(--navy);
+      color: white;
+      padding: 14px 18px;
+      text-align: left;
+      font-size: 13px;
+    }
+
+    .data-table td {
+      padding: 14px 18px;
+      font-size: 13px;
+      color: var(--text-dark);
+      border-bottom: 1px solid var(--light-grey);
+    }
+
+    /* Status badges */
+    .badge { padding: 4px 12px; border-radius: 50px; font-size: 12px; font-weight: bold; }
+    .badge-active   { background-color: #dcfce7; color: #15803d; }
+    .badge-inactive { background-color: #fee2e2; color: #b91c1c; }
+    .badge-pending  { background-color: #fef9c3; color: #854d0e; }
+
+    /* Action buttons inside table */
+    .btn-approve {
+      padding: 6px 14px;
+      background-color: #dcfce7;
+      color: #15803d;
+      border: none;
+      border-radius: 50px;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-right: 6px;
+    }
+
+    .btn-block {
+      padding: 6px 14px;
+      background-color: #fee2e2;
+      color: #b91c1c;
+      border: none;
+      border-radius: 50px;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <!-- NAVBAR -->
+  <nav>
+    <a href="index.html" class="nav-logo">Lokseva</a>
+    <div class="nav-right">
+      <span class="nav-user">🛡️ Admin Panel</span>
+      <!-- Logout goes back to the landing page -->
+      <a href="index.html" class="btn-logout">Logout</a>
+    </div>
+  </nav>
+
+  <!-- HERO BANNER -->
+  <div class="hero-banner">
+    <h1>Welcome, <span>Admin</span> 🛡️</h1>
+    <p>Manage users, providers, and bookings from here.</p>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main">
+
+    <!-- PLATFORM STATS -->
+    <div class="section-title">Platform Overview</div>
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-icon">👤</div>
+        <div class="stat-num">1,240</div>
+        <div class="stat-lbl">Total Users</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🔧</div>
+        <div class="stat-num">320</div>
+        <div class="stat-lbl">Providers</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">📋</div>
+        <div class="stat-num">5,800</div>
+        <div class="stat-lbl">Total Bookings</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">💰</div>
+        <div class="stat-num">₹2.4L</div>
+        <div class="stat-lbl">Revenue</div>
+      </div>
+    </div>
+
+    <!-- MANAGE PROVIDERS TABLE -->
+    <div class="section-title">Manage Providers</div>
+    <div class="data-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Service</th>
+            <th>Location</th>
+            <th>Rating</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Rajan Sharma</td>
+            <td>⚡ Electrician</td>
+            <td>Andheri, Mumbai</td>
+            <td>⭐ 4.9</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td><button class="btn-block">Block</button></td>
+          </tr>
+          <tr>
+            <td>Ajay Kumar</td>
+            <td>🔧 Plumber</td>
+            <td>Bandra, Mumbai</td>
+            <td>⭐ 4.8</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td><button class="btn-block">Block</button></td>
+          </tr>
+          <tr>
+            <td>Suresh Yadav</td>
+            <td>🖌️ Painter</td>
+            <td>Dadar, Mumbai</td>
+            <td>⭐ 4.5</td>
+            <td><span class="badge badge-pending">Pending</span></td>
+            <td>
+              <button class="btn-approve">Approve</button>
+              <button class="btn-block">Reject</button>
+            </td>
+          </tr>
+          <tr>
+            <td>Vikram Singh</td>
+            <td>🧹 Cleaner</td>
+            <td>Kurla, Mumbai</td>
+            <td>⭐ 3.2</td>
+            <td><span class="badge badge-inactive">Blocked</span></td>
+            <td><button class="btn-approve">Unblock</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- MANAGE USERS TABLE -->
+    <div class="section-title">Manage Users</div>
+    <div class="data-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email / Phone</th>
+            <th>Bookings</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Rahul Mehta</td>
+            <td>rahul@email.com</td>
+            <td>8</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td><button class="btn-block">Block</button></td>
+          </tr>
+          <tr>
+            <td>Sneha Patil</td>
+            <td>sneha@email.com</td>
+            <td>3</td>
+            <td><span class="badge badge-active">Active</span></td>
+            <td><button class="btn-block">Block</button></td>
+          </tr>
+          <tr>
+            <td>Amit Shah</td>
+            <td>amit@email.com</td>
+            <td>12</td>
+            <td><span class="badge badge-inactive">Blocked</span></td>
+            <td><button class="btn-approve">Unblock</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div><!-- end main -->
+
+</body>
+</html>

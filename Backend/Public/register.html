@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Lokseva - Register</title>
+
+  <style>
+
+    /* ---------- PAGE BACKGROUND ---------- */
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #5aace0;   /* same sky blue as login page */
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px 0;
+    }
+
+    /* ---------- LOGO CIRCLE (floating above card) ---------- */
+    .logo {
+      width: 110px;
+      height: 110px;
+      background-color: #1a2757;   /* dark navy */
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 22px;
+      font-weight: bold;
+      margin-bottom: -30px;        /* overlaps the card */
+      z-index: 2;
+      position: relative;
+    }
+
+    /* ---------- OUTER CARD ---------- */
+    .card {
+      background-color: #e8edf2;   /* light grey */
+      border-radius: 24px;
+      padding: 50px 30px 30px 30px;
+      width: 420px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .app-name {
+      font-size: 20px;
+      font-weight: bold;
+      color: #1a2757;
+      text-align: center;
+      margin-bottom: 4px;
+    }
+
+    .app-tagline {
+      font-size: 12px;
+      color: #607080;
+      text-align: center;
+      margin-bottom: 6px;
+    }
+
+    /* Link to go back to login page */
+    .back-link {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .back-link a {
+      color: #607080;
+      font-size: 13px;
+      text-decoration: none;
+    }
+
+    .back-link a:hover {
+      color: #1a2757;
+    }
+
+    /* ---------- ROLE BUTTONS ---------- */
+    /* Same pill-shaped teal buttons as login page */
+    .role-buttons {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .role-btn {
+      flex: 1;
+      padding: 10px 8px;
+      border: none;
+      border-radius: 50px;
+      background-color: #80cdd4;   /* teal */
+      color: #1a2757;
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+    }
+
+    /* Highlighted when selected */
+    .role-btn.active {
+      background-color: #4aabb5;
+      color: white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    .role-btn:hover {
+      background-color: #5bbec8;
+    }
+
+    /* ---------- INNER FORM SECTION ---------- */
+    /* Teal inner box - same as login page */
+    .form-section {
+      display: none;               /* hidden by default */
+      background-color: #80cdd4;
+      border-radius: 16px;
+      padding: 24px 20px;
+    }
+
+    .form-section.active {
+      display: block;
+    }
+
+    .form-title {
+      font-size: 15px;
+      font-weight: bold;
+      color: #1a2757;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    /* ---------- INPUT FIELDS ---------- */
+    label {
+      display: block;
+      font-size: 12px;
+      color: #1a2757;
+      margin-bottom: 4px;
+      font-weight: bold;
+      padding-left: 4px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 50px;         /* pill shaped */
+      font-size: 14px;
+      color: #607080;
+      background-color: white;
+      margin-bottom: 14px;
+      box-sizing: border-box;
+      outline: none;
+    }
+
+    input:focus {
+      box-shadow: 0 0 0 2px #1a2757;
+    }
+
+    input::placeholder {
+      color: #a0b0c0;
+      font-size: 13px;
+    }
+
+    /* ---------- REGISTER BUTTON ---------- */
+    .btn {
+      width: 100%;
+      padding: 12px;
+      background-color: #1a2757;   /* dark navy */
+      color: white;
+      border: none;
+      border-radius: 50px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 4px;
+    }
+
+    .btn:hover {
+      background-color: #243580;
+    }
+
+    /* ---------- MESSAGE BOXES ---------- */
+    /* Same style as login page - replaces alert() */
+    .message {
+      display: none;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      margin-bottom: 12px;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    /* Red = error */
+    .message.error {
+      display: block;
+      background-color: #fde8e8;
+      color: #b91c1c;
+      border: 1px solid #f5a5a5;
+    }
+
+    /* Green = success */
+    .message.success {
+      display: block;
+      background-color: #e0f7ea;
+      color: #15803d;
+      border: 1px solid #86efac;
+    }
+
+    /* ---------- LOGIN LINK AT BOTTOM ---------- */
+    .login-link {
+      text-align: center;
+      margin-top: 18px;
+      font-size: 13px;
+      color: #607080;
+    }
+
+    .login-link a {
+      color: #1a2757;
+      font-weight: bold;
+      text-decoration: none;
+    }
+
+    .login-link a:hover {
+      text-decoration: underline;
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <!-- LOGO CIRCLE -->
+  <div class="logo">LS</div>
+
+  <!-- OUTER CARD -->
+  <div class="card">
+
+    <div class="app-name">Lokseva</div>
+    <div class="app-tagline">Local Services, At Your Doorstep</div>
+
+    <!-- Back to home link -->
+    <div class="back-link">
+      <a href="index.html">← Back to Home</a>
+    </div>
+
+    <!-- ROLE BUTTONS - only User and Provider for registration -->
+    <div class="role-buttons">
+      <button class="role-btn" onclick="selectRole('user')">👤 USER</button>
+      <button class="role-btn" onclick="selectRole('provider')">🔧 PROVIDER</button>
+    </div>
+
+    <!-- ===== USER REGISTER FORM ===== -->
+    <div class="form-section" id="form-user">
+      <div class="form-title">Create User Account</div>
+
+      <!-- Message box shown instead of alert() -->
+      <div class="message" id="msg-user"></div>
+
+      <label>Full Name</label>
+      <input type="text" id="user-name" placeholder="Enter your full name" />
+
+      <label>Email (Gmail only)</label>
+      <input type="email" id="user-email" placeholder="example@gmail.com" />
+
+      <label>Phone Number</label>
+      <input type="tel" id="user-phone" placeholder="Enter 10-digit phone number" maxlength="10" />
+
+      <label>Password</label>
+      <input type="password" id="user-password" placeholder="Min 8 chars, 1 number, 1 special char" />
+
+      <label>Confirm Password</label>
+      <input type="password" id="user-confirm" placeholder="Re-enter your password" />
+
+      <button class="btn" onclick="registerUser('user')">Register as User</button>
+    </div>
+
+    <!-- ===== PROVIDER REGISTER FORM ===== -->
+    <div class="form-section" id="form-provider">
+      <div class="form-title">Create Provider Account</div>
+
+      <div class="message" id="msg-provider"></div>
+
+      <label>Full Name</label>
+      <input type="text" id="provider-name" placeholder="Enter your full name" />
+
+      <label>Email (Gmail only)</label>
+      <input type="email" id="provider-email" placeholder="example@gmail.com" />
+
+      <label>Phone Number</label>
+      <input type="tel" id="provider-phone" placeholder="Enter 10-digit phone number" maxlength="10" />
+
+      <label>Password</label>
+      <input type="password" id="provider-password" placeholder="Min 8 chars, 1 number, 1 special char" />
+
+      <label>Confirm Password</label>
+      <input type="password" id="provider-confirm" placeholder="Re-enter your password" />
+
+      <button class="btn" onclick="registerUser('provider')">Register as Provider</button>
+    </div>
+
+    <!-- Already have account link -->
+    <div class="login-link">
+      Already have an account? <a href="login.html">Login here</a>
+    </div>
+
+  </div><!-- end card -->
+
+
+  <script>
+
+    // ============================================================
+    // selectRole(role)
+    // Works exactly like login page - highlights button, shows form
+    // ============================================================
+    function selectRole(role) {
+
+      // Remove active from all buttons
+      var buttons = document.querySelectorAll('.role-btn');
+      for (var i = 0; i < buttons.length; i++) {
+        buttons[i].classList.remove('active');
+      }
+
+      // Highlight clicked button
+      for (var i = 0; i < buttons.length; i++) {
+        if (buttons[i].textContent.toLowerCase().includes(role)) {
+          buttons[i].classList.add('active');
+        }
+      }
+
+      // Hide all forms
+      var forms = document.querySelectorAll('.form-section');
+      for (var i = 0; i < forms.length; i++) {
+        forms[i].classList.remove('active');
+      }
+
+      // Show selected form
+      document.getElementById('form-' + role).classList.add('active');
+
+      // Clear old messages
+      clearMessage('user');
+      clearMessage('provider');
+    }
+
+
+    // ============================================================
+    // showMessage(role, text, type)
+    // Shows coloured message box - same as login page
+    // type: 'error' = red, 'success' = green
+    // ============================================================
+    function showMessage(role, text, type) {
+      var box = document.getElementById('msg-' + role);
+      box.textContent = text;
+      box.className = 'message ' + type;
+    }
+
+    function clearMessage(role) {
+      var box = document.getElementById('msg-' + role);
+      box.textContent = '';
+      box.className = 'message';
+    }
+
+
+    // ============================================================
+    // registerUser(role)
+    // Called when Register button is clicked
+    // Validates all fields one by one, then shows success
+    // ============================================================
+    function registerUser(role) {
+
+      // Read all field values
+      var name     = document.getElementById(role + '-name').value.trim();
+      var email    = document.getElementById(role + '-email').value.trim();
+      var phone    = document.getElementById(role + '-phone').value.trim();
+      var password = document.getElementById(role + '-password').value.trim();
+      var confirm  = document.getElementById(role + '-confirm').value.trim();
+
+      // ── VALIDATION 1: All fields must be filled ──
+      if (name === '' || email === '' || phone === '' || password === '' || confirm === '') {
+        showMessage(role, '⚠️ Please fill in all fields.', 'error');
+        return;
+      }
+
+      // ── VALIDATION 2: Full name must have at least 2 words ──
+      // e.g. "Rahul" alone is not valid, "Rahul Mehta" is valid
+      if (name.split(' ').length < 2) {
+        showMessage(role, '⚠️ Please enter your full name (first and last name).', 'error');
+        return;
+      }
+
+      // ── VALIDATION 3: Email must be a valid @gmail.com address ──
+      // RegEx pattern checks that email ends with @gmail.com
+      var emailPattern = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
+      if (!emailPattern.test(email)) {
+        showMessage(role, '⚠️ Please use a valid @gmail.com address.', 'error');
+        return;
+      }
+
+      // ── VALIDATION 4: Phone must be exactly 10 digits ──
+      // /^[0-9]{10}$/ means: only digits, exactly 10 of them
+      var phonePattern = /^[0-9]{10}$/;
+      if (!phonePattern.test(phone)) {
+        showMessage(role, '⚠️ Please enter a valid 10-digit phone number.', 'error');
+        return;
+      }
+
+      // ── VALIDATION 5: Password strength ──
+      // Must be 8+ chars, have a number, and have a special character
+      if (password.length < 8) {
+        showMessage(role, '⚠️ Password needs ≥8 chars, a number and a special character.', 'error');
+        return;
+      }
+      var hasNumber  = /[0-9]/.test(password);
+      var hasSpecial = /[!@#$%^&*(),.?":{}|<>_\-]/.test(password);
+      if (!hasNumber || !hasSpecial) {
+        showMessage(role, '⚠️ Password needs ≥8 chars, a number and a special character.', 'error');
+        return;
+      }
+
+      // ── VALIDATION 6: Confirm password must match ──
+      if (password !== confirm) {
+        showMessage(role, '⚠️ Passwords do not match. Please try again.', 'error');
+        return;
+      }
+
+      // ── ALL VALIDATIONS PASSED ──
+      // Show success message and redirect to the appropriate dashboard
+      showMessage(role, '✅ Account created successfully! Redirecting...', 'success');
+
+      setTimeout(function() {
+        if (role === 'user') {
+          window.location.href = 'user-dashboard.html';
+        } else if (role === 'provider') {
+          window.location.href = 'provider-dashboard.html';
+        } else {
+          window.location.href = 'login.html'; // fallback
+        }
+      }, 2000);
+    }
+
+  </script>
+
+</body>
+</html>
