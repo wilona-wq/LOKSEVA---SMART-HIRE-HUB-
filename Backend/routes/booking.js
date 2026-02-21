@@ -80,6 +80,10 @@ router.put('/status/:bookingId', async (req, res) => {
   try {
     const { status } = req.body;
     // status can be: 'accepted', 'rejected', 'completed'
+    const allowed = ['accepted','rejected','completed'];
+    if (!allowed.includes(status)) {
+      return res.json({ success: false, message: 'Invalid status provided.' });
+    }
 
     const booking = await Booking.findByIdAndUpdate(
       req.params.bookingId,

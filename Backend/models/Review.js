@@ -46,3 +46,7 @@ const reviewSchema = new mongoose.Schema({
 });
 
 module.exports = mongoose.model('Review', reviewSchema);
+
+app.use('/booking', require('./routes/booking'));
+app.use('/review',  require('./routes/review'));
+app.use('/auth', require('./routes/auth'));

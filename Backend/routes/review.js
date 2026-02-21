@@ -48,6 +48,27 @@ router.post('/submit', async (req, res) => {
 });
 
 // ════════════════════════════════════════
+// GET ALL REVIEWS — GET /review/all/list
+// Called by admin-dashboard.html for
+// review monitoring
+// (this route must be defined before the
+// providerId param route to avoid conflicts)
+// ════════════════════════════════════════
+router.get('/all/list', async (req, res) => {
+  try {
+    const reviews = await Review.find()
+      .populate('userId',     'name email')
+      .populate('providerId', 'name email')
+      .sort({ createdAt: -1 });
+
+    res.json({ success: true, reviews });
+
+  } catch (err) {
+    res.json({ success: false, message: 'Server error: ' + err.message });
+  }
+});
+
+// ════════════════════════════════════════
 // GET PROVIDER REVIEWS — GET /review/:providerId
 // Called by nearby_providers.html to show
 // reviews and ratings on provider cards
@@ -65,23 +86,5 @@ router.get('/:providerId', async (req, res) => {
   }
 });
 
-// ════════════════════════════════════════
-// GET ALL REVIEWS — GET /review/all/list
-// Called by admin-dashboard.html for
-// review monitoring
-// ════════════════════════════════════════
-router.get('/all/list', async (req, res) => {
-  try {
-    const reviews = await Review.find()
-      .populate('userId',     'name email')
-      .populate('providerId', 'name email')
-      .sort({ createdAt: -1 });
-
-    res.json({ success: true, reviews });
-
-  } catch (err) {
-    res.json({ success: false, message: 'Server error: ' + err.message });
-  }
-});
 
 module.exports = router;

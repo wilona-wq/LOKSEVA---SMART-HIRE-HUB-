@@ -42,6 +42,13 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: null
   },
+
+  // average rating for providers (0–5)
+  rating: {
+    type: Number,
+    default: 0
+  },
+
   createdAt: {
     type: Date,
     default: Date.now

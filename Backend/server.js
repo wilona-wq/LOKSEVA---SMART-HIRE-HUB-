@@ -21,18 +21,27 @@ app.use(session({
 }));
 
 // ── SERVE FRONTEND FILES ──
-// This serves all your HTML files from the public folder
-app.use(express.static(path.join(__dirname, 'public')));
-
-// ── CONNECT MONGODB ──
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('✅ MongoDB Connected'))
-  .catch(err => console.log('❌ DB Error:', err));
+// This serves all your HTML files from the Public folder (note case)
+app.use(express.static(path.join(__dirname, 'Public')));
 
 // ── ROUTES ──
 app.use('/auth', require('./routes/auth'));
+app.use('/booking', require('./routes/booking'));
+app.use('/review', require('./routes/review'));
+
+// ── CONNECT MONGODB ──
+const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/lokseva';
+mongoose.connect(mongoUri, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log('✅ MongoDB Connected'))
+  .catch(err => console.log('❌ DB Error:', err));
+
+// catch 404
+app.use((req, res) => {
+  res.status(404).json({ success: false, message: 'Endpoint not found' });
+});
 
 // ── START SERVER ──
-app.listen(process.env.PORT, () => {
-  console.log(`🚀 Lokseva running at http://localhost:${process.env.PORT}`);
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`🚀 Lokseva running at http://localhost:${PORT}`);
 });
