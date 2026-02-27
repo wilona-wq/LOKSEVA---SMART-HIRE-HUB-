@@ -5,18 +5,15 @@ const Booking  = require('../models/Booking');
 // ════════════════════════════════════════
 // CREATE BOOKING — POST /booking/create
 // Called when user clicks "Confirm Booking"
-// in nearby_providers.html
 // ════════════════════════════════════════
 router.post('/create', async (req, res) => {
   try {
     const { userId, providerId, service, date, timeSlot, address, note } = req.body;
 
-    // Check all required fields
     if (!userId || !providerId || !service || !date || !timeSlot || !address) {
       return res.json({ success: false, message: 'All fields are required.' });
     }
 
-    // Save booking to MongoDB
     const booking = await Booking.create({
       userId,
       providerId,
@@ -37,14 +34,13 @@ router.post('/create', async (req, res) => {
 
 // ════════════════════════════════════════
 // GET USER BOOKINGS — GET /booking/user/:userId
-// Called by user-dashboard.html to show
-// "My Recent Bookings" table
+// Called by user-dashboard to show bookings table
 // ════════════════════════════════════════
 router.get('/user/:userId', async (req, res) => {
   try {
     const bookings = await Booking.find({ userId: req.params.userId })
-      .populate('providerId', 'name email phone')  // get provider details
-      .sort({ createdAt: -1 });                     // newest first
+      .populate('providerId', 'name email phone')
+      .sort({ createdAt: -1 });
 
     res.json({ success: true, bookings });
 
@@ -55,14 +51,13 @@ router.get('/user/:userId', async (req, res) => {
 
 // ════════════════════════════════════════
 // GET PROVIDER BOOKINGS — GET /booking/provider/:providerId
-// Called by provider-dashboard.html to show
-// "New Booking Requests" table
+// Called by provider-dashboard to show requests
 // ════════════════════════════════════════
 router.get('/provider/:providerId', async (req, res) => {
   try {
     const bookings = await Booking.find({ providerId: req.params.providerId })
-      .populate('userId', 'name email phone')  // get user details
-      .sort({ createdAt: -1 });                // newest first
+      .populate('userId', 'name email phone')
+      .sort({ createdAt: -1 });
 
     res.json({ success: true, bookings });
 
@@ -74,28 +69,52 @@ router.get('/provider/:providerId', async (req, res) => {
 // ════════════════════════════════════════
 // UPDATE BOOKING STATUS — PUT /booking/status/:bookingId
 // Called when provider clicks Accept or Reject
-// in provider-dashboard.html
 // ════════════════════════════════════════
 router.put('/status/:bookingId', async (req, res) => {
   try {
     const { status } = req.body;
-    // status can be: 'accepted', 'rejected', 'completed'
-    const allowed = ['accepted','rejected','completed'];
-    if (!allowed.includes(status)) {
-      return res.json({ success: false, message: 'Invalid status provided.' });
-    }
 
     const booking = await Booking.findByIdAndUpdate(
       req.params.bookingId,
       { status },
-      { new: true }   // return updated booking
+      { new: true }
     );
 
     if (!booking) {
       return res.json({ success: false, message: 'Booking not found.' });
     }
 
-    res.json({ success: true, message: 'Booking status updated!', booking });
+    res.json({ success: true, message: 'Status updated!', booking });
+
+  } catch (err) {
+    res.json({ success: false, message: 'Server error: ' + err.message });
+  }
+});
+
+// ════════════════════════════════════════
+// MARK AS RATED — PUT /booking/rated/:bookingId
+// Called after user submits star rating
+// Marks isRated: true so Rate button
+// changes to filled stars in the table
+// ════════════════════════════════════════
+router.put('/rated/:bookingId', async (req, res) => {
+  try {
+    const { userRating } = req.body;
+
+    const booking = await Booking.findByIdAndUpdate(
+      req.params.bookingId,
+      {
+        isRated:    true,       // hides Rate button
+        userRating: userRating  // saves star count (1-5)
+      },
+      { new: true }
+    );
+
+    if (!booking) {
+      return res.json({ success: false, message: 'Booking not found.' });
+    }
+
+    res.json({ success: true, booking });
 
   } catch (err) {
     res.json({ success: false, message: 'Server error: ' + err.message });
@@ -104,14 +123,13 @@ router.put('/status/:bookingId', async (req, res) => {
 
 // ════════════════════════════════════════
 // GET ALL BOOKINGS — GET /booking/all
-// Called by admin-dashboard.html to show
-// all bookings on the platform
+// Called by admin-dashboard
 // ════════════════════════════════════════
 router.get('/all', async (req, res) => {
   try {
     const bookings = await Booking.find()
-      .populate('userId',    'name email')
-      .populate('providerId','name email')
+      .populate('userId',     'name email')
+      .populate('providerId', 'name email')
       .sort({ createdAt: -1 });
 
     res.json({ success: true, bookings });

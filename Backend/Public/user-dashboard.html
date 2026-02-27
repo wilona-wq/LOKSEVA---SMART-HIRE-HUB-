@@ -695,6 +695,7 @@ e.g. Great work! Very professional."
       btn.textContent = '⏳ Submitting...';
 
       try {
+        // STEP 1 — Save review in Review collection
         const res  = await fetch('/review/submit', {
           method:  'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -714,25 +715,39 @@ e.g. Great work! Very professional."
           return;
         }
 
-        // ── SUCCESS ──
+        // STEP 2 — Mark booking as rated
+        // So Rate button changes to filled stars
+        await fetch('/booking/rated/' + currentBookingId, {
+          method:  'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userRating: selectedStar })
+        });
+
+        // STEP 3 — Show success message
         showRateMsg('✅ Thank you for your rating!', 'success');
 
-        // Update the Rate button in table to show stars given
-        var rateBtn = document.querySelector('[data-booking="' + currentBookingId + '"]');
-        if (rateBtn) {
-          rateBtn.outerHTML = '<span class="rated-stars">' + '★'.repeat(selectedStar) + '☆'.repeat(5 - selectedStar) + '</span>';
-        }
-
-        // Close modal after 1.5 seconds
+        // STEP 4 — Close modal and reload table
         setTimeout(function() {
           closeRating();
+          loadBookings();  // reload table — Rate button becomes ★★★★☆
           btn.disabled    = false;
           btn.textContent = 'Submit Rating';
         }, 1500);
 
       } catch (err) {
-        // Backend not connected — show success anyway (demo mode)
+        // Backend not connected — demo mode
         showRateMsg('✅ Rating submitted! (Demo mode)', 'success');
+
+        // Still update UI in demo mode
+        var rateBtn = document.querySelector('[data-booking="' + currentBookingId + '"]');
+        if (rateBtn) {
+          rateBtn.outerHTML =
+            '<span class="rated-stars">' +
+            '★'.repeat(selectedStar) +
+            '☆'.repeat(5 - selectedStar) +
+            '</span>';
+        }
+
         setTimeout(function() {
           closeRating();
           btn.disabled    = false;

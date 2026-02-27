@@ -17,31 +17,25 @@ app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
-  cookie: { maxAge: 24 * 60 * 60 * 1000 }
+  cookie: { maxAge: 24 * 60 * 60 * 1000 } // 1 day
 }));
 
-// ── SERVE FRONTEND FILES ──
-// This serves all your HTML files from the Public folder (note case)
-app.use(express.static(path.join(__dirname, 'Public')));
-
-// ── ROUTES ──
-app.use('/auth', require('./routes/auth'));
-app.use('/booking', require('./routes/booking'));
-app.use('/review', require('./routes/review'));
+// ── SERVE FRONTEND FILES from /public ──
+app.use(express.static(path.join(__dirname, 'public')));
 
 // ── CONNECT MONGODB ──
-const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/lokseva';
-mongoose.connect(mongoUri, { useNewUrlParser: true, useUnifiedTopology: true })
+// Note: useNewUrlParser and useUnifiedTopology removed
+// They are not supported in newer versions of Mongoose
+mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('✅ MongoDB Connected'))
   .catch(err => console.log('❌ DB Error:', err));
 
-// catch 404
-app.use((req, res) => {
-  res.status(404).json({ success: false, message: 'Endpoint not found' });
-});
+// ── ROUTES ──
+app.use('/auth',    require('./routes/auth'));
+app.use('/booking', require('./routes/booking'));
+app.use('/review',  require('./routes/review'));
 
 // ── START SERVER ──
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`🚀 Lokseva running at http://localhost:${PORT}`);
+app.listen(process.env.PORT, () => {
+  console.log(`🚀 Lokseva running at http://localhost:${process.env.PORT}`);
 });

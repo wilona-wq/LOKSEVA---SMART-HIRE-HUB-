@@ -35,23 +35,31 @@ const bookingSchema = new mongoose.Schema({
   address: {
     type: String,
     required: true
-    // user's address for the job
   },
 
   note: {
     type: String,
     default: ''
-    // optional problem description
   },
 
   status: {
     type: String,
     enum: ['pending', 'accepted', 'rejected', 'completed'],
     default: 'pending'
-    // pending  → provider not yet responded
-    // accepted → provider accepted
-    // rejected → provider rejected
-    // completed → job done
+  },
+
+  // ── RATING FIELDS (NEW) ──
+  isRated: {
+    type: Boolean,
+    default: false
+    // false = Rate button shown
+    // true  = Stars shown instead
+  },
+
+  userRating: {
+    type: Number,
+    default: 0
+    // 1 to 5 stars given by user
   },
 
   createdAt: {
