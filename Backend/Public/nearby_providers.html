@@ -1052,10 +1052,11 @@ function closeModal() {
   document.getElementById('overlay').classList.remove('open');
 }
 
-function confirmBook() {
+async function confirmBook() {
   var date = document.getElementById('b-date').value;
   var slot = document.getElementById('b-slot').value;
   var addr = document.getElementById('b-addr').value.trim();
+  var note = document.getElementById('b-note') ? document.getElementById('b-note').value.trim() : '';
   var err  = document.getElementById('m-err');
 
   if (!date || !slot || !addr) {
@@ -1065,6 +1066,42 @@ function confirmBook() {
   }
 
   err.classList.remove('show');
+
+  // Get session info
+  const session = await fetch('/auth/me').then(r => r.json());
+
+  if (!session.loggedIn) {
+    err.textContent = '⚠️ Please login first.';
+    err.classList.add('show');
+    return;
+  }
+
+  try {
+    const res  = await fetch('/booking/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId:     session.userId,
+        providerId: bookP._id,
+        service:    META[curSvc].label,
+        date:       date,
+        timeSlot:   slot,
+        address:    addr,
+        note:       note
+      })
+    });
+    const data = await res.json();
+
+    if (!data.success) {
+      err.textContent = '⚠️ ' + data.message;
+      err.classList.add('show');
+      return;
+    }
+  } catch(e) {
+    // If backend not running, still show success screen (frontend demo mode)
+    console.log('Backend not connected, showing demo success.');
+  }
+
   document.getElementById('modal-form').style.display     = 'none';
   document.getElementById('success-screen').style.display = 'block';
   document.getElementById('success-txt').innerHTML =

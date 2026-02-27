@@ -279,37 +279,8 @@
             <th>Action</th>
           </tr>
         </thead>
-        <tbody>
-          <tr>
-            <td>Rahul Mehta</td>
-            <td>⚡ Electrician</td>
-            <td>20 Feb, 10:00 AM</td>
-            <td>Andheri West</td>
-            <td>
-              <button class="btn-accept">Accept</button>
-              <button class="btn-reject">Reject</button>
-            </td>
-          </tr>
-          <tr>
-            <td>Sneha Patil</td>
-            <td>⚡ Electrician</td>
-            <td>21 Feb, 2:00 PM</td>
-            <td>Bandra East</td>
-            <td>
-              <button class="btn-accept">Accept</button>
-              <button class="btn-reject">Reject</button>
-            </td>
-          </tr>
-          <tr>
-            <td>Amit Shah</td>
-            <td>⚡ Electrician</td>
-            <td>22 Feb, 11:00 AM</td>
-            <td>Dadar</td>
-            <td>
-              <button class="btn-accept">Accept</button>
-              <button class="btn-reject">Reject</button>
-            </td>
-          </tr>
+        <tbody id="requests-tbody">
+          <tr><td colspan="5" style="text-align:center;color:#607080;">⏳ Loading requests...</td></tr>
         </tbody>
       </table>
     </div>
@@ -319,13 +290,107 @@
     <div class="earnings-box">
       <div>
         <h3>Total Earnings This Month</h3>
-        <div class="earnings-amount">₹12,400</div>
-        <div class="earnings-label">From 21 completed jobs</div>
+        <div class="earnings-amount" id="earn-amount">₹12,400</div>
+        <div class="earnings-label" id="earn-label">From 21 completed jobs</div>
       </div>
       <div style="font-size: 60px;">💰</div>
     </div>
 
   </div><!-- end main -->
+
+  <script>
+
+    // Update booking status — accept or reject
+    async function updateStatus(bookingId, status) {
+      try {
+        const res  = await fetch('/booking/status/' + bookingId, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status })
+        });
+        const data = await res.json();
+        if (data.success) loadRequests(); // reload table
+      } catch (err) {
+        console.log('Backend not connected.');
+      }
+    }
+
+    // Load real booking requests from backend
+    async function loadRequests() {
+      try {
+        const session = await fetch('/auth/me').then(r => r.json());
+
+        if (!session.loggedIn) {
+          window.location.href = '/login.html';
+          return;
+        }
+
+        // Update welcome name
+        document.querySelector('.nav-user').textContent  = '🔧 Welcome, ' + session.name;
+        document.querySelector('.hero-banner h1').innerHTML =
+          'Hello, <span>' + session.name.split(' ')[0] + '!</span> 👋';
+
+        const res  = await fetch('/booking/provider/' + session.userId);
+        const data = await res.json();
+
+        var tbody = document.getElementById('requests-tbody');
+
+        if (!data.success || data.bookings.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#607080;">No booking requests yet.</td></tr>';
+          return;
+        }
+
+        // Count completed jobs for earnings
+        var completed = data.bookings.filter(function(b) { return b.status === 'completed'; });
+        document.getElementById('earn-label').textContent = 'From ' + completed.length + ' completed jobs';
+
+        tbody.innerHTML = data.bookings.map(function(b) {
+          var actionBtns = '';
+          if (b.status === 'pending') {
+            actionBtns =
+              '<button class="btn-accept" onclick="updateStatus(\'' + b._id + '\', \'accepted\')">Accept</button>' +
+              '<button class="btn-reject" onclick="updateStatus(\'' + b._id + '\', \'rejected\')">Reject</button>';
+          } else {
+            var color = b.status === 'accepted' ? '#15803d' : '#b91c1c';
+            actionBtns = '<span style="font-weight:bold;color:' + color + ';">' +
+              b.status.charAt(0).toUpperCase() + b.status.slice(1) + '</span>';
+          }
+
+          return '<tr>' +
+            '<td>' + (b.userId ? b.userId.name : 'N/A') + '</td>' +
+            '<td>' + b.service + '</td>' +
+            '<td>' + b.date + ' • ' + b.timeSlot + '</td>' +
+            '<td>' + b.address + '</td>' +
+            '<td>' + actionBtns + '</td>' +
+          '</tr>';
+        }).join('');
+
+      } catch (err) {
+        // Backend not running — show demo data
+        console.log('Backend not connected, showing demo data.');
+        document.getElementById('requests-tbody').innerHTML = `
+          <tr>
+            <td>Rahul Mehta</td><td>⚡ Electrician</td>
+            <td>20 Feb, 10:00 AM</td><td>Andheri West</td>
+            <td>
+              <button class="btn-accept">Accept</button>
+              <button class="btn-reject">Reject</button>
+            </td>
+          </tr>
+          <tr>
+            <td>Sneha Patil</td><td>⚡ Electrician</td>
+            <td>21 Feb, 2:00 PM</td><td>Bandra East</td>
+            <td>
+              <button class="btn-accept">Accept</button>
+              <button class="btn-reject">Reject</button>
+            </td>
+          </tr>
+        `;
+      }
+    }
+
+    loadRequests();
+  </script>
 
 </body>
 </html>

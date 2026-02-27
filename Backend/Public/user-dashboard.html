@@ -334,38 +334,539 @@
             <th>Provider</th>
             <th>Date</th>
             <th>Status</th>
+            <th>Rating</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody id="bookings-tbody">
           <tr>
             <td>⚡ Electrician</td>
             <td>Rajan Sharma</td>
             <td>15 Feb 2026</td>
             <td><span class="badge badge-completed">Completed</span></td>
+            <td><button class="btn-rate" onclick="openRating('b1','Rajan Sharma')">⭐ Rate</button></td>
           </tr>
           <tr>
             <td>🔧 Plumber</td>
             <td>Ajay Kumar</td>
             <td>10 Feb 2026</td>
             <td><span class="badge badge-completed">Completed</span></td>
+            <td><button class="btn-rate" onclick="openRating('b2','Ajay Kumar')">⭐ Rate</button></td>
           </tr>
           <tr>
             <td>🧹 Cleaner</td>
             <td>Priya Devi</td>
             <td>18 Feb 2026</td>
             <td><span class="badge badge-pending">Pending</span></td>
+            <td><span style="color:#a0b0c0;font-size:12px;">Not yet</span></td>
           </tr>
           <tr>
             <td>🖌️ Painter</td>
             <td>Suresh Yadav</td>
             <td>5 Feb 2026</td>
             <td><span class="badge badge-cancelled">Cancelled</span></td>
+            <td><span style="color:#a0b0c0;font-size:12px;">—</span></td>
           </tr>
         </tbody>
       </table>
     </div>
 
   </div><!-- end main -->
+
+  <!-- ══════════════════════════════════════════════ -->
+  <!--           STAR RATING MODAL                  -->
+  <!-- ══════════════════════════════════════════════ -->
+  <div id="rating-overlay">
+
+    <div class="rating-modal">
+
+      <!-- Close button top right -->
+      <button class="close-btn" onclick="closeRating()">✕</button>
+
+      <!-- Header -->
+      <div class="rate-emoji">🛠️</div>
+      <h3 class="rate-title">How was the service?</h3>
+      <p class="rate-subtitle">Rate your experience with <b id="rate-pname">Provider</b></p>
+
+      <!-- ★ STAR SELECTOR ★ -->
+      <div class="stars" id="star-container">
+        <span class="star" data-val="1" onclick="selectStar(1)">★</span>
+        <span class="star" data-val="2" onclick="selectStar(2)">★</span>
+        <span class="star" data-val="3" onclick="selectStar(3)">★</span>
+        <span class="star" data-val="4" onclick="selectStar(4)">★</span>
+        <span class="star" data-val="5" onclick="selectStar(5)">★</span>
+      </div>
+
+      <!-- Rating label below stars -->
+      <div class="rate-label" id="rate-label">Tap a star to rate</div>
+
+      <!-- Comment box -->
+      <textarea id="rate-comment"
+        placeholder="Write a comment (optional)...
+e.g. Great work! Very professional."
+        rows="3">
+      </textarea>
+
+      <!-- Submit button -->
+      <button class="btn-submit-rate" onclick="submitRating()">
+        Submit Rating
+      </button>
+
+      <!-- Message -->
+      <div class="rate-msg" id="rate-msg"></div>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <!--        STYLES FOR RATING FEATURE             -->
+  <!-- ══════════════════════════════════════════════ -->
+  <style>
+
+    /* Rate button in table */
+    .btn-rate {
+      padding: 6px 14px;
+      background-color: #fef9c3;
+      color: #854d0e;
+      border: none;
+      border-radius: 50px;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .btn-rate:hover {
+      background-color: #fde68a;
+    }
+
+    /* Already rated stars in table */
+    .rated-stars {
+      color: #f59e0b;
+      font-size: 14px;
+      letter-spacing: 2px;
+    }
+
+    /* Dark overlay behind modal */
+    #rating-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.55);
+      z-index: 999;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Show overlay */
+    #rating-overlay.open {
+      display: flex;
+    }
+
+    /* White modal box */
+    .rating-modal {
+      background: white;
+      border-radius: 24px;
+      padding: 36px 32px 28px;
+      width: 380px;
+      text-align: center;
+      position: relative;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+      animation: popIn 0.3s ease;
+    }
+
+    @keyframes popIn {
+      from { transform: scale(0.8); opacity: 0; }
+      to   { transform: scale(1);   opacity: 1; }
+    }
+
+    /* Close button */
+    .close-btn {
+      position: absolute;
+      top: 14px; right: 16px;
+      background: #e8edf2;
+      border: none;
+      border-radius: 50%;
+      width: 30px; height: 30px;
+      font-size: 14px;
+      cursor: pointer;
+      color: #607080;
+    }
+
+    .close-btn:hover { background: #d0d8e0; }
+
+    .rate-emoji    { font-size: 40px; margin-bottom: 8px; }
+    .rate-title    { font-size: 20px; font-weight: bold; color: #1a2757; margin-bottom: 6px; }
+    .rate-subtitle { font-size: 13px; color: #607080; margin-bottom: 20px; }
+
+    /* ★ STARS ★ */
+    .stars {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .star {
+      font-size: 42px;
+      color: #d1d5db;       /* grey by default */
+      cursor: pointer;
+      transition: color 0.15s, transform 0.15s;
+      line-height: 1;
+    }
+
+    /* Filled star */
+    .star.filled {
+      color: #f59e0b;       /* golden yellow */
+    }
+
+    /* Hover effect */
+    .star:hover {
+      transform: scale(1.2);
+    }
+
+    /* Label text below stars */
+    .rate-label {
+      font-size: 13px;
+      font-weight: bold;
+      color: #607080;
+      margin-bottom: 16px;
+      min-height: 20px;
+    }
+
+    /* Comment textarea */
+    #rate-comment {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1.5px solid #d1d5db;
+      border-radius: 14px;
+      font-size: 13px;
+      color: #607080;
+      resize: none;
+      outline: none;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+      margin-bottom: 16px;
+    }
+
+    #rate-comment:focus {
+      border-color: #80cdd4;
+    }
+
+    /* Submit button */
+    .btn-submit-rate {
+      width: 100%;
+      padding: 12px;
+      background-color: #1a2757;
+      color: white;
+      border: none;
+      border-radius: 50px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .btn-submit-rate:hover { background-color: #243580; }
+
+    .btn-submit-rate:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    /* Message box */
+    .rate-msg {
+      margin-top: 12px;
+      font-size: 13px;
+      font-weight: bold;
+      min-height: 20px;
+    }
+
+    .rate-msg.success { color: #15803d; }
+    .rate-msg.error   { color: #b91c1c; }
+
+  </style>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <!--        JAVASCRIPT FOR RATING FEATURE         -->
+  <!-- ══════════════════════════════════════════════ -->
+  <script>
+
+    // ── State variables ──
+    var selectedStar   = 0;       // which star is selected (1-5)
+    var currentBookingId   = '';  // booking being rated
+    var currentProviderId  = '';  // provider being rated
+
+    // Labels for each star rating
+    var starLabels = {
+      1: '😞 Very Bad',
+      2: '😐 Poor',
+      3: '🙂 Okay',
+      4: '😊 Good',
+      5: '🤩 Excellent!'
+    };
+
+    // ── OPEN RATING MODAL ──
+    // Called when user clicks "⭐ Rate" button in table
+    function openRating(bookingId, providerName, providerId) {
+      currentBookingId  = bookingId;
+      currentProviderId = providerId || '';
+
+      // Set provider name in modal
+      document.getElementById('rate-pname').textContent = providerName;
+
+      // Reset stars
+      selectedStar = 0;
+      resetStars();
+
+      // Clear comment and message
+      document.getElementById('rate-comment').value = '';
+      document.getElementById('rate-msg').textContent = '';
+      document.getElementById('rate-msg').className   = 'rate-msg';
+      document.getElementById('rate-label').textContent = 'Tap a star to rate';
+
+      // Show modal
+      document.getElementById('rating-overlay').classList.add('open');
+    }
+
+    // ── CLOSE MODAL ──
+    function closeRating() {
+      document.getElementById('rating-overlay').classList.remove('open');
+    }
+
+    // ── RESET ALL STARS TO GREY ──
+    function resetStars() {
+      document.querySelectorAll('.star').forEach(function(s) {
+        s.classList.remove('filled');
+      });
+    }
+
+    // ── SELECT STAR ──
+    // Called when user clicks a star
+    // Fills all stars up to clicked one
+    function selectStar(val) {
+      selectedStar = val;
+
+      // Fill stars 1 to val, unfill the rest
+      document.querySelectorAll('.star').forEach(function(s) {
+        var starVal = parseInt(s.getAttribute('data-val'));
+        if (starVal <= val) {
+          s.classList.add('filled');    // golden
+        } else {
+          s.classList.remove('filled'); // grey
+        }
+      });
+
+      // Update label below stars
+      document.getElementById('rate-label').textContent = starLabels[val];
+    }
+
+    // ── HOVER EFFECT ──
+    // Preview stars when mouse hovers
+    document.querySelectorAll('.star').forEach(function(star) {
+      star.addEventListener('mouseover', function() {
+        var hoverVal = parseInt(this.getAttribute('data-val'));
+        document.querySelectorAll('.star').forEach(function(s) {
+          s.classList.toggle('filled', parseInt(s.getAttribute('data-val')) <= hoverVal);
+        });
+        document.getElementById('rate-label').textContent = starLabels[hoverVal];
+      });
+
+      // When mouse leaves — go back to selected state
+      star.addEventListener('mouseleave', function() {
+        document.querySelectorAll('.star').forEach(function(s) {
+          s.classList.toggle('filled', parseInt(s.getAttribute('data-val')) <= selectedStar);
+        });
+        document.getElementById('rate-label').textContent =
+          selectedStar ? starLabels[selectedStar] : 'Tap a star to rate';
+      });
+    });
+
+    // ── SUBMIT RATING ──
+    async function submitRating() {
+      // Must select at least 1 star
+      if (selectedStar === 0) {
+        showRateMsg('⚠️ Please select a star rating.', 'error');
+        return;
+      }
+
+      var comment = document.getElementById('rate-comment').value.trim();
+      var btn     = document.querySelector('.btn-submit-rate');
+
+      btn.disabled    = true;
+      btn.textContent = '⏳ Submitting...';
+
+      try {
+        const res  = await fetch('/review/submit', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            bookingId:  currentBookingId,
+            providerId: currentProviderId,
+            rating:     selectedStar,
+            comment:    comment
+          })
+        });
+        const data = await res.json();
+
+        if (!data.success) {
+          showRateMsg('⚠️ ' + data.message, 'error');
+          btn.disabled    = false;
+          btn.textContent = 'Submit Rating';
+          return;
+        }
+
+        // ── SUCCESS ──
+        showRateMsg('✅ Thank you for your rating!', 'success');
+
+        // Update the Rate button in table to show stars given
+        var rateBtn = document.querySelector('[data-booking="' + currentBookingId + '"]');
+        if (rateBtn) {
+          rateBtn.outerHTML = '<span class="rated-stars">' + '★'.repeat(selectedStar) + '☆'.repeat(5 - selectedStar) + '</span>';
+        }
+
+        // Close modal after 1.5 seconds
+        setTimeout(function() {
+          closeRating();
+          btn.disabled    = false;
+          btn.textContent = 'Submit Rating';
+        }, 1500);
+
+      } catch (err) {
+        // Backend not connected — show success anyway (demo mode)
+        showRateMsg('✅ Rating submitted! (Demo mode)', 'success');
+        setTimeout(function() {
+          closeRating();
+          btn.disabled    = false;
+          btn.textContent = 'Submit Rating';
+        }, 1500);
+      }
+    }
+
+    function showRateMsg(text, type) {
+      var msg = document.getElementById('rate-msg');
+      msg.textContent = text;
+      msg.className   = 'rate-msg ' + type;
+    }
+
+    // Badge colour function
+    function badgeClass(status) {
+      if (status === 'completed') return 'badge-completed';
+      if (status === 'pending')   return 'badge-pending';
+      if (status === 'accepted')  return 'badge-pending';
+      if (status === 'rejected')  return 'badge-cancelled';
+      return 'badge-pending';
+    }
+
+    // Load real bookings from backend
+    async function loadBookings() {
+      try {
+        const session = await fetch('/auth/me').then(r => r.json());
+
+        if (!session.loggedIn) {
+          window.location.href = '/login.html';
+          return;
+        }
+
+        document.querySelector('.nav-user').textContent = '👤 Welcome, ' + session.name;
+        document.querySelector('.hero-banner h1').innerHTML =
+          'Hello, <span>' + session.name.split(' ')[0] + '!</span> 👋';
+
+        const res  = await fetch('/booking/user/' + session.userId);
+        const data = await res.json();
+
+        var tbody = document.getElementById('bookings-tbody');
+
+        if (!data.success || data.bookings.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#607080;">No bookings yet.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = data.bookings.map(function(b) {
+
+          var statusBadge = '<span class="badge ' + badgeClass(b.status) + '">' +
+            b.status.charAt(0).toUpperCase() + b.status.slice(1) + '</span>';
+
+          // Rating column:
+          // completed + not rated → show Rate button
+          // completed + rated     → show filled stars
+          // pending/accepted      → show "Not yet"
+          // rejected              → show dash
+          var ratingCol = '';
+          if (b.status === 'completed') {
+            if (b.isRated) {
+              // Already rated — show stars
+              ratingCol = '<span class="rated-stars">' +
+                '★'.repeat(b.userRating) +
+                '☆'.repeat(5 - b.userRating) +
+                '</span>';
+            } else {
+              // Not yet rated — show Rate button
+              ratingCol = '<button class="btn-rate" ' +
+                'data-booking="' + b._id + '" ' +
+                'onclick="openRating(\'' + b._id + '\',\'' +
+                (b.providerId ? b.providerId.name : 'Provider') + '\',\'' +
+                (b.providerId ? b.providerId._id : '') + '\')">' +
+                '⭐ Rate</button>';
+            }
+          } else if (b.status === 'rejected') {
+            ratingCol = '<span style="color:#a0b0c0;font-size:12px;">—</span>';
+          } else {
+            ratingCol = '<span style="color:#a0b0c0;font-size:12px;">Not yet</span>';
+          }
+
+          return '<tr>' +
+            '<td>' + b.service + '</td>' +
+            '<td>' + (b.providerId ? b.providerId.name : 'N/A') + '</td>' +
+            '<td>' + new Date(b.createdAt).toLocaleDateString('en-IN') + '</td>' +
+            '<td>' + statusBadge + '</td>' +
+            '<td>' + ratingCol + '</td>' +
+          '</tr>';
+
+        }).join('');
+
+      } catch (err) {
+        // Demo mode — backend not running
+        console.log('Demo mode');
+        document.getElementById('bookings-tbody').innerHTML = `
+          <tr>
+            <td>⚡ Electrician</td>
+            <td>Rajan Sharma</td>
+            <td>15 Feb 2026</td>
+            <td><span class="badge badge-completed">Completed</span></td>
+            <td><button class="btn-rate" onclick="openRating('demo1','Rajan Sharma')">⭐ Rate</button></td>
+          </tr>
+          <tr>
+            <td>🔧 Plumber</td>
+            <td>Ajay Kumar</td>
+            <td>10 Feb 2026</td>
+            <td><span class="badge badge-completed">Completed</span></td>
+            <td><button class="btn-rate" onclick="openRating('demo2','Ajay Kumar')">⭐ Rate</button></td>
+          </tr>
+          <tr>
+            <td>🧹 Cleaner</td>
+            <td>Priya Devi</td>
+            <td>18 Feb 2026</td>
+            <td><span class="badge badge-pending">Pending</span></td>
+            <td><span style="color:#a0b0c0;font-size:12px;">Not yet</span></td>
+          </tr>
+          <tr>
+            <td>🖌️ Painter</td>
+            <td>Suresh Yadav</td>
+            <td>5 Feb 2026</td>
+            <td><span class="badge badge-cancelled">Cancelled</span></td>
+            <td><span style="color:#a0b0c0;font-size:12px;">—</span></td>
+          </tr>
+        `;
+      }
+    }
+
+    // Close modal if user clicks dark overlay outside modal
+    document.getElementById('rating-overlay').addEventListener('click', function(e) {
+      if (e.target === this) closeRating();
+    });
+
+    loadBookings();
+
+  </script>
 
 </body>
 </html>

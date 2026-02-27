@@ -238,14 +238,110 @@
         <thead>
           <tr>
             <th>Name</th>
-            <th>Service</th>
-            <th>Location</th>
-            <th>Rating</th>
+            <th>Email</th>
             <th>Status</th>
             <th>Action</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody id="providers-tbody">
+          <tr><td colspan="4" style="text-align:center;color:#607080;">⏳ Loading providers...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- MANAGE USERS TABLE -->
+    <div class="section-title">Manage Users</div>
+    <div class="data-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="users-tbody">
+          <tr><td colspan="4" style="text-align:center;color:#607080;">⏳ Loading users...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div><!-- end main -->
+
+  <script>
+
+    // Block or unblock a user
+    async function toggleBlock(userId, currentStatus) {
+      var newStatus = currentStatus === 'blocked' ? 'active' : 'blocked';
+      try {
+        await fetch('/auth/block/' + userId, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: newStatus })
+        });
+        loadAll(); // reload tables
+      } catch (err) {
+        console.log('Backend not connected.');
+      }
+    }
+
+    // Build a table row for user or provider
+    function buildRow(u) {
+      var isBlocked = u.status === 'blocked';
+      var badge     = isBlocked
+        ? '<span class="badge badge-inactive">Blocked</span>'
+        : '<span class="badge badge-active">Active</span>';
+      var btn = isBlocked
+        ? '<button class="btn-approve" onclick="toggleBlock(\'' + u._id + '\',\'blocked\')">Unblock</button>'
+        : '<button class="btn-block"   onclick="toggleBlock(\'' + u._id + '\',\'active\')">Block</button>';
+
+      return '<tr>' +
+        '<td>' + u.name  + '</td>' +
+        '<td>' + u.email + '</td>' +
+        '<td>' + badge   + '</td>' +
+        '<td>' + btn     + '</td>' +
+      '</tr>';
+    }
+
+    // Load all users and providers from backend
+    async function loadAll() {
+      try {
+        const res  = await fetch('/auth/all-users');
+        const data = await res.json();
+
+        if (!data.success) return;
+
+        var providers = data.users.filter(function(u) { return u.role === 'provider'; });
+        var users     = data.users.filter(function(u) { return u.role === 'user'; });
+
+        document.getElementById('providers-tbody').innerHTML =
+          providers.length ? providers.map(buildRow).join('') :
+          '<tr><td colspan="4" style="text-align:center;">No providers yet.</td></tr>';
+
+        document.getElementById('users-tbody').innerHTML =
+          users.length ? users.map(buildRow).join('') :
+          '<tr><td colspan="4" style="text-align:center;">No users yet.</td></tr>';
+
+      } catch (err) {
+        // Backend not running — show demo data
+        console.log('Backend not connected, showing demo data.');
+        document.getElementById('providers-tbody').innerHTML = `
+          <tr><td>Rajan Sharma</td><td>rajan@gmail.com</td><td><span class="badge badge-active">Active</span></td><td><button class="btn-block">Block</button></td></tr>
+          <tr><td>Ajay Kumar</td><td>ajay@gmail.com</td><td><span class="badge badge-active">Active</span></td><td><button class="btn-block">Block</button></td></tr>
+        `;
+        document.getElementById('users-tbody').innerHTML = `
+          <tr><td>Rahul Mehta</td><td>rahul@gmail.com</td><td><span class="badge badge-active">Active</span></td><td><button class="btn-block">Block</button></td></tr>
+          <tr><td>Sneha Patil</td><td>sneha@gmail.com</td><td><span class="badge badge-active">Active</span></td><td><button class="btn-block">Block</button></td></tr>
+        `;
+      }
+    }
+
+    loadAll();
+  </script>
+
+</body>
+</html>
           <tr>
             <td>Rajan Sharma</td>
             <td>⚡ Electrician</td>
@@ -301,30 +397,18 @@
         <tbody>
           <tr>
             <td>Rahul Mehta</td>
-            <td>rahul@email.com</td>
+            <td><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="e496858c9188a48189858d88ca878b89">[email&#160;protected]</a></td>
             <td>8</td>
             <td><span class="badge badge-active">Active</span></td>
             <td><button class="btn-block">Block</button></td>
           </tr>
           <tr>
             <td>Sneha Patil</td>
-            <td>sneha@email.com</td>
+            <td><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="3f4c515a575e7f5a525e5653115c5052">[email&#160;protected]</a></td>
             <td>3</td>
             <td><span class="badge badge-active">Active</span></td>
             <td><button class="btn-block">Block</button></td>
           </tr>
           <tr>
             <td>Amit Shah</td>
-            <td>amit@email.com</td>
-            <td>12</td>
-            <td><span class="badge badge-inactive">Blocked</span></td>
-            <td><button class="btn-approve">Unblock</button></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-  </div><!-- end main -->
-
-</body>
-</html>
+            <td><a href="/cdn-cgi/l/email-protection" class="__c
