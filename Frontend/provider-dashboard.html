@@ -306,8 +306,13 @@
         const res  = await fetch('/booking/status/' + bookingId, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
           body: JSON.stringify({ status })
         });
+        if (res.status === 401) {
+          window.location.href = '/login.html';
+          return;
+        }
         const data = await res.json();
         if (data.success) loadRequests(); // reload table
       } catch (err) {
@@ -318,7 +323,7 @@
     // Load real booking requests from backend
     async function loadRequests() {
       try {
-        const session = await fetch('/auth/me').then(r => r.json());
+        const session = await fetch('/auth/me', { credentials: 'same-origin' }).then(r => r.json());
 
         if (!session.loggedIn) {
           window.location.href = '/login.html';
@@ -330,7 +335,7 @@
         document.querySelector('.hero-banner h1').innerHTML =
           'Hello, <span>' + session.name.split(' ')[0] + '!</span> 👋';
 
-        const res  = await fetch('/booking/provider/' + session.userId);
+        const res  = await fetch('/booking/provider/' + session.userId, { credentials: 'same-origin' });
         const data = await res.json();
 
         var tbody = document.getElementById('requests-tbody');

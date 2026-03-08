@@ -696,10 +696,21 @@ e.g. Great work! Very professional."
 
       try {
         // STEP 1 — Save review in Review collection
+        // Get user ID from session first
+        const session = await fetch('/auth/me', { credentials: 'same-origin' }).then(r => r.json());
+        if (!session.loggedIn) {
+          showRateMsg('⚠️ Please login to submit rating.', 'error');
+          btn.disabled = false;
+          btn.textContent = 'Submit Rating';
+          return;
+        }
+
         const res  = await fetch('/review/submit', {
           method:  'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
           body: JSON.stringify({
+            userId:     session.userId,
             bookingId:  currentBookingId,
             providerId: currentProviderId,
             rating:     selectedStar,
@@ -720,6 +731,7 @@ e.g. Great work! Very professional."
         await fetch('/booking/rated/' + currentBookingId, {
           method:  'PUT',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
           body: JSON.stringify({ userRating: selectedStar })
         });
 
@@ -774,7 +786,7 @@ e.g. Great work! Very professional."
     // Load real bookings from backend
     async function loadBookings() {
       try {
-        const session = await fetch('/auth/me').then(r => r.json());
+        const session = await fetch('/auth/me', { credentials: 'same-origin' }).then(r => r.json());
 
         if (!session.loggedIn) {
           window.location.href = '/login.html';
@@ -785,7 +797,8 @@ e.g. Great work! Very professional."
         document.querySelector('.hero-banner h1').innerHTML =
           'Hello, <span>' + session.name.split(' ')[0] + '!</span> 👋';
 
-        const res  = await fetch('/booking/user/' + session.userId);
+        const res  = await fetch('/booking/user/' + session.userId, { credentials: 'same-origin' });
+        if (res.status === 401) { window.location.href = '/login.html'; return; }
         const data = await res.json();
 
         var tbody = document.getElementById('bookings-tbody');

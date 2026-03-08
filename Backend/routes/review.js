@@ -1,6 +1,8 @@
 const express = require('express');
 const router  = express.Router();
+const mongoose = require('mongoose');
 const Review  = require('../models/Review');
+const Booking = require('../models/Booking');
 const User    = require('../models/User');
 
 // ════════════════════════════════════════
@@ -10,7 +12,8 @@ const User    = require('../models/User');
 // ════════════════════════════════════════
 router.post('/submit', async (req, res) => {
   try {
-    const { userId, providerId, bookingId, rating, comment } = req.body;
+    const { providerId, bookingId, rating, comment } = req.body;
+    const userId = req.session.userId; // enforce from session
 
     // Check required fields
     if (!userId || !providerId || !bookingId || !rating) {
@@ -20,6 +23,17 @@ router.post('/submit', async (req, res) => {
     // Check rating is between 1 and 5
     if (rating < 1 || rating > 5) {
       return res.json({ success: false, message: 'Rating must be between 1 and 5.' });
+    }
+
+    // validate object ids
+    if (!mongoose.Types.ObjectId.isValid(providerId) || !mongoose.Types.ObjectId.isValid(bookingId)) {
+      return res.json({ success: false, message: 'Invalid provider or booking ID.' });
+    }
+
+    // ensure booking exists and belongs to this user
+    const booking = await Booking.findById(bookingId);
+    if (!booking || booking.userId.toString() !== userId) {
+      return res.json({ success: false, message: 'Invalid booking.' });
     }
 
     // Check if user already reviewed this booking
@@ -56,6 +70,9 @@ router.post('/submit', async (req, res) => {
 // ════════════════════════════════════════
 router.get('/all/list', async (req, res) => {
   try {
+    if (req.session.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Forbidden.' });
+    }
     const reviews = await Review.find()
       .populate('userId',     'name email')
       .populate('providerId', 'name email')
@@ -75,6 +92,8 @@ router.get('/all/list', async (req, res) => {
 // ════════════════════════════════════════
 router.get('/:providerId', async (req, res) => {
   try {
+    // allow provider to see their own reviews, or any logged-in user (for display on cards)
+    // admins could also view but not necessary here
     const reviews = await Review.find({ providerId: req.params.providerId })
       .populate('userId', 'name')   // get reviewer name
       .sort({ createdAt: -1 });     // newest first

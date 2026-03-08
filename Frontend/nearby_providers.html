@@ -1068,7 +1068,7 @@ async function confirmBook() {
   err.classList.remove('show');
 
   // Get session info
-  const session = await fetch('/auth/me').then(r => r.json());
+  const session = await fetch('/auth/me', { credentials: 'same-origin' }).then(r => r.json());
 
   if (!session.loggedIn) {
     err.textContent = '⚠️ Please login first.';
@@ -1080,6 +1080,7 @@ async function confirmBook() {
     const res  = await fetch('/booking/create', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
       body: JSON.stringify({
         userId:     session.userId,
         providerId: bookP._id,
@@ -1090,6 +1091,10 @@ async function confirmBook() {
         note:       note
       })
     });
+    if (res.status === 401) {
+      window.location.href = '/login.html';
+      return;
+    }
     const data = await res.json();
 
     if (!data.success) {

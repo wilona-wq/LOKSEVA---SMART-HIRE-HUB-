@@ -45,10 +45,20 @@ function sendOTPEmail(toEmail, otp) {
 // ── REGISTER ──
 router.post('/register', async (req, res) => {
   try {
-    const { name, email, phone, password, role } = req.body;
+    let { name, email, phone, password, role } = req.body;
+
+    // normalize inputs early
+    name  = (name || '').trim();
+    email = (email || '').trim().toLowerCase();
+    phone = (phone || '').trim();
+    role  = (role || '').trim().toLowerCase();
 
     if (!name || !email || !phone || !password || !role)
       return res.json({ success: false, message: 'All fields are required.' });
+
+    // only allow user/provider registration (admins are created manually)
+    if (!['user', 'provider'].includes(role))
+      return res.json({ success: false, message: 'Invalid role.' });
 
     if (!email.endsWith('@gmail.com'))
       return res.json({ success: false, message: 'Only @gmail.com emails allowed.' });
@@ -68,17 +78,30 @@ router.post('/register', async (req, res) => {
     const otpExpiry      = new Date(Date.now() + 10 * 60 * 1000);
 
     if (existing && !existing.isVerified) {
-      existing.name = name; existing.password = hashedPassword;
-      existing.otp  = otp;  existing.otpExpiry = otpExpiry;
+      existing.name = name;
+      existing.password = hashedPassword;
+      existing.otp  = otp;
+      existing.otpExpiry = otpExpiry;
       await existing.save();
     } else {
-      await User.create({ name, email, phone, password: hashedPassword, role, otp, otpExpiry, isVerified: false, status: 'active' });
+      await User.create({
+        name,
+        email,
+        phone,
+        password: hashedPassword,
+        role,
+        otp,
+        otpExpiry,
+        isVerified: false,
+        status: 'active'
+      });
     }
 
     await sendOTPEmail(email, otp);
     res.json({ success: true, message: 'OTP sent to ' + email });
 
   } catch (err) {
+    console.error('Register error:', err);
     res.json({ success: false, message: 'Server error: ' + err.message });
   }
 });
@@ -86,7 +109,9 @@ router.post('/register', async (req, res) => {
 // ── VERIFY OTP ──
 router.post('/verify-otp', async (req, res) => {
   try {
-    const { email, otp } = req.body;
+    let { email, otp } = req.body;
+    email = (email || '').trim().toLowerCase();
+
     const user = await User.findOne({ email });
 
     if (!user)                       return res.json({ success: false, message: 'User not found.' });
@@ -108,7 +133,9 @@ router.post('/verify-otp', async (req, res) => {
 // ── RESEND OTP ──
 router.post('/resend-otp', async (req, res) => {
   try {
-    const { email } = req.body;
+    let { email } = req.body;
+    email = (email || '').trim().toLowerCase();
+
     const user = await User.findOne({ email });
 
     if (!user)           return res.json({ success: false, message: 'Email not found.' });
@@ -129,23 +156,44 @@ router.post('/resend-otp', async (req, res) => {
 // ── LOGIN ──
 router.post('/login', async (req, res) => {
   try {
-    const { email, password, role } = req.body;
+    let { email, password, role } = req.body;
+
+    email = (email || '').trim().toLowerCase();
+    role  = (role || '').trim().toLowerCase();
+
+    if (!email || !password || !role)
+      return res.json({ success: false, message: 'Email, password and role are required.' });
+
+    if (!['user', 'provider'].includes(role))
+      return res.json({ success: false, message: 'Invalid role for login.' });
 
     const user = await User.findOne({ email });
     if (!user)              return res.json({ success: false, message: 'Email not registered.' });
     if (user.role !== role) return res.json({ success: false, message: `No ${role} account found.` });
-    if (!user.isVerified)   return res.json({ success: false, message: 'Please verify your email first.' });
+    if (!user.isVerified) {
+      // automatically resend OTP when someone tries to log in without verification
+      const otp = generateOTP();
+      user.otp = otp;
+      user.otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
+      await user.save();
+      await sendOTPEmail(user.email, otp);
+      return res.json({ success: false,
+        message: 'Please verify your email first. A new OTP has been sent to your Gmail.'
+      });
+    }
     if (user.status === 'blocked') return res.json({ success: false, message: 'Your account has been blocked. Contact admin.' });
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.json({ success: false, message: 'Incorrect password.' });
 
+    // login success - save session
     req.session.userId = user._id;
     req.session.role   = user.role;
     req.session.name   = user.name;
 
     res.json({ success: true, role: user.role, name: user.name, userId: user._id });
   } catch (err) {
+    console.error('Login error:', err);
     res.json({ success: false, message: 'Server error.' });
   }
 });
@@ -168,6 +216,9 @@ router.get('/me', (req, res) => {
 // ── GET ALL USERS (Admin) ──
 router.get('/all-users', async (req, res) => {
   try {
+    if (req.session.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Forbidden.' });
+    }
     const users = await User.find({}, 'name email role status isVerified createdAt');
     res.json({ success: true, users });
   } catch (err) {
@@ -178,6 +229,9 @@ router.get('/all-users', async (req, res) => {
 // ── BLOCK / UNBLOCK USER (Admin) ──
 router.put('/block/:userId', async (req, res) => {
   try {
+    if (req.session.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Forbidden.' });
+    }
     const { status } = req.body;
     const user = await User.findByIdAndUpdate(
       req.params.userId,

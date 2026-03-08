@@ -384,7 +384,7 @@
     // ══════════════════════════════════════════
     async function registerUser(role) {
       var name     = document.getElementById(role + '-name').value.trim();
-      var email    = document.getElementById(role + '-email').value.trim();
+      var email    = document.getElementById(role + '-email').value.trim().toLowerCase();
       var phone    = document.getElementById(role + '-phone').value.trim();
       var password = document.getElementById(role + '-password').value.trim();
       var confirm  = document.getElementById(role + '-confirm').value.trim();
@@ -422,6 +422,7 @@
         const res  = await fetch('/auth/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
           body: JSON.stringify({ name, email, phone, password, role })
         });
         const data = await res.json();
@@ -441,7 +442,7 @@
         btn.textContent = '✅ OTP Sent';
 
       } catch (err) {
-        showMessage(role, '⚠️ Cannot connect to server. Is Node.js running?', 'error');
+        showMessage(role, '⚠️ Cannot connect to server. Is Node.js running and are you viewing the page via http://localhost:3000?', 'error');
         btn.disabled = false;
         btn.textContent = 'Register as ' + role.charAt(0).toUpperCase() + role.slice(1);
       }
@@ -467,6 +468,7 @@
         const res  = await fetch('/auth/verify-otp', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
           body: JSON.stringify({ email: currentEmail, otp })
         });
         const data = await res.json();
@@ -484,7 +486,7 @@
         }, 2000);
 
       } catch (err) {
-        showMessage(role, '⚠️ Cannot connect to server. Is Node.js running?', 'error');
+        showMessage(role, '⚠️ Cannot connect to server. Is Node.js running and are you viewing the page via http://localhost:3000?', 'error');
         btn.disabled = false;
         btn.textContent = '✅ Verify OTP';
       }
@@ -504,6 +506,7 @@
         const res  = await fetch('/auth/resend-otp', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
           body: JSON.stringify({ email: currentEmail })
         });
         const data = await res.json();
@@ -518,6 +521,10 @@
       }
     }
 
+    // show user form by default
+    window.addEventListener('DOMContentLoaded', function() {
+      selectRole('user');
+    });
   </script>
 
 </body>

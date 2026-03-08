@@ -317,7 +317,7 @@
 
     // ── USER / PROVIDER LOGIN → calls backend ──
     async function loginUser(role) {
-      var email    = document.getElementById(role + '-email').value.trim();
+      var email    = document.getElementById(role + '-email').value.trim().toLowerCase();
       var password = document.getElementById(role + '-password').value.trim();
       var btn      = document.getElementById(role + '-login-btn');
 
@@ -340,6 +340,7 @@
         const res  = await fetch('/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin', // ensure cookies are included
           body: JSON.stringify({ email, password, role })
         });
         const data = await res.json();
@@ -359,7 +360,7 @@
         }, 1500);
 
       } catch (err) {
-        showMessage(role, '⚠️ Cannot connect to server. Make sure Node.js is running.', 'error');
+        showMessage(role, '⚠️ Cannot connect to server. Make sure Node.js is running and open this page via http://localhost:3000.', 'error');
         btn.disabled = false;
         btn.textContent = 'Login as ' + role.charAt(0).toUpperCase() + role.slice(1);
       }
@@ -385,6 +386,10 @@
       }
     }
 
+    // select default role so a form is shown immediately
+    window.addEventListener('DOMContentLoaded', function() {
+      selectRole('user');
+    });
   </script>
 
 </body>
