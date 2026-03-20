@@ -353,12 +353,15 @@
         }
 
         // Success — redirect based on role
-        showMessage(role, '✅ Login successful! Redirecting...', 'success');
-        setTimeout(function() {
-          if (data.role === 'user')     window.location.href = '/user-dashboard.html';
-          if (data.role === 'provider') window.location.href = '/provider-dashboard.html';
-        }, 1500);
-
+        setTimeout(function () {
+  if (data.role === 'user') {
+    window.location.href = 'user-dashboard.html';
+  } else if (data.role === 'provider') {
+    window.location.href = 'provider-dashboard.html';
+  } else {
+    console.log("Role missing:", data);
+  }
+}, 1500);
       } catch (err) {
         showMessage(role, '⚠️ Cannot connect to server. Make sure Node.js is running and open this page via http://localhost:3000.', 'error');
         btn.disabled = false;
@@ -391,6 +394,10 @@
       selectRole('user');
     });
   </script>
+
+  <!-- API Integration Scripts -->
+  <script src="api.js"></script>
+  <script src="login.js"></script>
 
 </body>
 </html>

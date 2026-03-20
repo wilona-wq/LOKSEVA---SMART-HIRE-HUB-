@@ -1,80 +1,90 @@
-const express  = require('express');
-const session  = require('express-session');
-const mongoose = require('mongoose');
-const cors     = require('cors');
-const path     = require('path');
-require('dotenv').config();
+require("dotenv").config();
+const express = require("express");
+const path = require("path");
+const session = require("express-session");
+const cors = require("cors");
+const connectDB = require("./config/database");
 
-// sanity checks
-if (!process.env.MONGO_URI) {
-  console.error('ERROR: MONGO_URI not defined in .env');
-  process.exit(1);
-}
-if (!process.env.SESSION_SECRET) {
-  console.warn('Warning: SESSION_SECRET not set, using default (not secure)');
-  process.env.SESSION_SECRET = 'default_secret';
-}
+// Import routes
+const authRoutes = require("./routes/authRoutes");
+const userRoutes = require("./routes/userRoutes");
+const providerRoutes = require("./routes/providerRoutes");
 
 const app = express();
 
-// ── MIDDLEWARE ──
-app.use(cors());
+// Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cors());
 
-// ── SESSION ──
-app.use(session({
-  secret: process.env.SESSION_SECRET,
-  resave: false,
-  saveUninitialized: false,
-  cookie: { maxAge: 24 * 60 * 60 * 1000 } // 1 day
-}));
+// Request logging middleware
+app.use((req, res, next) => {
+  console.log(`\n📨 ${req.method} ${req.path}`);
+  if (Object.keys(req.body).length > 0) {
+    console.log("   Body:", req.body);
+  }
+  next();
+});
 
-// ── SERVE FRONTEND FILES from /public (and keep backward compatibility with Frontend folder)
-app.use(express.static(path.join(__dirname, 'public')));
-// some developers edit files in the separate Frontend/ directory; serve those too so changes
-// are reflected without confusion. express.static stops searching after the first match.
-app.use(express.static(path.join(__dirname, '../Frontend')));
+// Session configuration
+app.use(
+  session({
+    secret: process.env.JWT_SECRET || "your_secret_key",
+    resave: false,
+    saveUninitialized: true,
+    cookie: { secure: false }, // Set to true if using https
+  })
+);
 
-// ── CONNECT MONGODB ──
-// Note: useNewUrlParser and useUnifiedTopology removed
-// They are not supported in newer versions of Mongoose
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log('✅ MongoDB Connected'))
-  .catch(err => {
-    console.error('❌ DB Error:', err);
-    // exit process; app can't function without database
-    process.exit(1);
+// Serve static files from Frontend
+app.use(express.static(path.join(__dirname, "../Frontend")));
+
+// Health check endpoint
+app.get("/", (req, res) => {
+  res.json({
+    success: true,
+    message: "🚀 LOKSEVA - Smart Hire Hub API is running",
+    version: "1.0.0",
   });
+});
 
-// ── ROUTES ──
-app.use('/auth', require('./routes/auth'));
+// API Routes
+app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/providers", providerRoutes);
 
-// simple auth middleware that checks for an active session
-function requireAuth(req, res, next) {
-  if (req.session && req.session.userId) return next();
-  res.status(401).json({ success: false, message: 'Not logged in.' });
-}
-
-app.use('/booking', requireAuth, require('./routes/booking'));
-app.use('/review',  requireAuth, require('./routes/review'));
-// ── DEFAULT ROUTE ──
-app.get('/', (req, res) => res.redirect('/index.html')); // landing page
-
-// catch-all 404
+// 404 handler
 app.use((req, res) => {
-  res.status(404).send('Not found');
+  res.status(404).json({
+    success: false,
+    message: "Route not found",
+  });
 });
 
-// ── GLOBAL ERROR HANDLER ──
-// catch unhandled errors passed to next()
+// Error handling middleware
 app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err);
-  res.status(500).json({ success: false, message: 'Internal server error.' });
+  console.error("Error:", err);
+  res.status(err.status || 500).json({
+    success: false,
+    message: err.message || "Internal server error",
+  });
 });
 
-// ── START SERVER ──
-const port = process.env.PORT || 3000;
-app.listen(port, () => {
-  console.log(`🚀 Lokseva running at http://localhost:${port}`);
-});
+// Connect to MongoDB and start server
+const PORT = process.env.PORT || 3000;
+
+const startServer = async () => {
+  try {
+    await connectDB();
+    app.listen(PORT, () => {
+      console.log(`✅ Server running on http://localhost:${PORT}`);
+    });
+  } catch (error) {
+    console.error("Failed to start server:", error);
+    process.exit(1);
+  }
+};
+
+startServer();
+
+module.exports = app;
