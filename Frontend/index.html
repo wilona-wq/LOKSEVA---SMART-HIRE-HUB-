@@ -816,32 +816,14 @@ style="object-fit: cover; vertical-align: middle; margin-left: 10px;" />
       <!-- Right: Provider preview card -->
       <div class="hero-card">
         <div class="hero-card-title">📍 Nearby Providers</div>
-
-        <div class="provider-row">
-          <div class="prov-icon">⚡</div>
-          <div class="prov-info">
-            <div class="prov-name">Rajan Sharma</div>
-            <div class="prov-detail">Electrician · 2.1 km</div>
+        <div id="hero-providers-list">
+          <div class="provider-row">
+            <div class="prov-icon">⏳</div>
+            <div class="prov-info">
+              <div class="prov-name">Loading providers...</div>
+              <div class="prov-detail">Please wait</div>
+            </div>
           </div>
-          <div class="prov-rating">4.9</div>
-        </div>
-
-        <div class="provider-row">
-          <div class="prov-icon">🔧</div>
-          <div class="prov-info">
-            <div class="prov-name">Ajay Kumar</div>
-            <div class="prov-detail">Plumber · 1.4 km</div>
-          </div>
-          <div class="prov-rating">4.8</div>
-        </div>
-
-        <div class="provider-row">
-          <div class="prov-icon">🧹</div>
-          <div class="prov-info">
-            <div class="prov-name">Priya Devi</div>
-            <div class="prov-detail">Cleaner · 0.9 km</div>
-          </div>
-          <div class="prov-rating">5.0</div>
         </div>
       </div>
 
@@ -1107,6 +1089,119 @@ style="object-fit: cover; vertical-align: middle; margin-left: 10px;" />
       © 2026 Lokseva. All rights reserved.
     </div>
   </footer>
+
+  <!-- Load API utilities and initialize navbar + hero providers -->
+  <script src="api.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", async () => {
+      // Update navbar with logged-in user info
+      const user = getStoredUser();
+      const navButtons = document.querySelector(".nav-buttons");
+      
+      if (user && user.name) {
+        // User is logged in - show welcome message and logout button
+        navButtons.innerHTML = `
+          <span style="color: #607080; font-size: 14px; font-weight: bold;">👤 ${user.name}</span>
+          <a href="${user.role === 'admin' ? 'admin-dashboard.html' : user.role === 'provider' ? 'provider-dashboard.html' : 'user-dashboard.html'}" class="btn-nav-outline">Dashboard</a>
+          <button onclick="logout()" class="btn-nav-fill" style="cursor: pointer; border: none;">Logout</button>
+        `;
+        
+        // Add logout function
+        window.logout = function() {
+          clearAuthData();
+          window.location.href = "index.html";
+        };
+      }
+      // If not logged in, the default Login/Register buttons remain
+      
+      // Load real providers for hero card
+      await loadHeroProviders();
+    });
+
+    // Load top 3 providers for hero card
+    async function loadHeroProviders() {
+      try {
+        const providers = await getAllProviders({ minRating: 4.5 });
+        
+        if (!providers || providers.length === 0) {
+          document.getElementById('hero-providers-list').innerHTML = `
+            <div class="provider-row">
+              <div class="prov-icon">📍</div>
+              <div class="prov-info">
+                <div class="prov-name">No providers available</div>
+                <div class="prov-detail">Check back soon</div>
+              </div>
+            </div>
+          `;
+          return;
+        }
+        
+        // Get first 3 providers
+        const topProviders = providers.slice(0, 3);
+        
+        const serviceIcons = {
+          electrician: '⚡',
+          plumber: '🔧',
+          cleaner: '🧹',
+          chef: '👨‍🍳',
+          carpenter: '🪚',
+          painter: '🖌️',
+          locksmith: '🔒',
+          ac: '❄️'
+        };
+        
+        const html = topProviders.map(provider => {
+          const icon = serviceIcons[provider.serviceCategory?.toLowerCase()] || '🔧';
+          const rating = provider.rating ? provider.rating.toFixed(1) : '4.5';
+          const service = provider.serviceCategory || 'Service';
+          const providerName = provider.userId?.name || 'Provider';
+          
+          return `
+            <div class="provider-row">
+              <div class="prov-icon">${icon}</div>
+              <div class="prov-info">
+                <div class="prov-name">${providerName}</div>
+                <div class="prov-detail">${service}</div>
+              </div>
+              <div class="prov-rating">${rating}</div>
+            </div>
+          `;
+        }).join('');
+        
+        document.getElementById('hero-providers-list').innerHTML = html;
+        console.log('✅ Hero providers loaded:', topProviders.length);
+      } catch (error) {
+        console.error('Error loading hero providers:', error);
+        // Show demo fallback
+        document.getElementById('hero-providers-list').innerHTML = `
+          <div class="provider-row">
+            <div class="prov-icon">⚡</div>
+            <div class="prov-info">
+              <div class="prov-name">Top Electricians</div>
+              <div class="prov-detail">Browse nearby</div>
+            </div>
+            <div class="prov-rating">4.9</div>
+          </div>
+          <div class="provider-row">
+            <div class="prov-icon">🔧</div>
+            <div class="prov-info">
+              <div class="prov-name">Trusted Plumbers</div>
+              <div class="prov-detail">Quick service</div>
+            </div>
+            <div class="prov-rating">4.8</div>
+          </div>
+          <div class="provider-row">
+            <div class="prov-icon">🧹</div>
+            <div class="prov-info">
+              <div class="prov-name">Expert Cleaners</div>
+              <div class="prov-detail">Professional team</div>
+            </div>
+            <div class="prov-rating">5.0</div>
+          </div>
+        `;
+      }
+    }
+  </script>
 
 </body>
 </html>

@@ -337,10 +337,10 @@
       showMessage(role, '⏳ Please wait...', 'info');
 
       try {
-        const res  = await fetch('/auth/login', {
+        const res  = await fetch('/api/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          credentials: 'same-origin', // ensure session cookie is sent/accepted
+          credentials: 'same-origin',
           body: JSON.stringify({ email, password, role })
         });
         const data = await res.json();
@@ -352,16 +352,24 @@
           return;
         }
 
+        // Store auth data in localStorage
+        localStorage.setItem('authToken', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        
+        console.log("✅ Login successful! User stored:", data.user.name);
+
         // Success — redirect based on role
         setTimeout(function () {
-  if (data.role === 'user') {
-    window.location.href = 'user-dashboard.html';
-  } else if (data.role === 'provider') {
-    window.location.href = 'provider-dashboard.html';
-  } else {
-    console.log("Role missing:", data);
-  }
-}, 1500);
+          if (data.user.role === 'user') {
+            window.location.href = 'user-dashboard.html';
+          } else if (data.user.role === 'provider') {
+            window.location.href = 'provider-dashboard.html';
+          } else if (data.user.role === 'admin') {
+            window.location.href = 'admin-dashboard.html';
+          } else {
+            console.log("Role missing:", data.user);
+          }
+        }, 1500);
       } catch (err) {
         showMessage(role, '⚠️ Cannot connect to server. Make sure Node.js is running and open this page via http://localhost:3000.', 'error');
         btn.disabled = false;

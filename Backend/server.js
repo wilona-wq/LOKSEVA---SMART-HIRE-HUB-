@@ -20,7 +20,7 @@ app.use(cors());
 // Request logging middleware
 app.use((req, res, next) => {
   console.log(`\n📨 ${req.method} ${req.path}`);
-  if (Object.keys(req.body).length > 0) {
+  if (req.body && Object.keys(req.body).length > 0) {
     console.log("   Body:", req.body);
   }
   next();

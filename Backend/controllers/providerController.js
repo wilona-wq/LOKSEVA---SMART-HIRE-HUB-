@@ -127,6 +127,27 @@ exports.getAllProviders = async (req, res) => {
   }
 };
 
+// Get all providers for admin (no filtering)
+exports.getAllProvidersAdmin = async (req, res) => {
+  try {
+    const providers = await Provider.find()
+      .populate("userId", "name email phone city address")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: providers.length,
+      providers,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching providers",
+      error: error.message,
+    });
+  }
+};
+
 // Find nearby providers
 exports.getNearbyProviders = async (req, res) => {
   try {

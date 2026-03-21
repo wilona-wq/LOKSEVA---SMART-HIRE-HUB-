@@ -2,73 +2,54 @@ const User = require("../models/User");
 const OTP = require("../models/OTP");
 const jwt = require("jsonwebtoken");
 
-// Generate JWT Token
 const generateToken = (id, role) => {
   return jwt.sign({ id, role }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRE || "7d",
   });
 };
 
-// Generate OTP
 const generateOTP = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
-// Register Controller
 exports.register = async (req, res) => {
   try {
     console.log("📨 REGISTRATION REQUEST RECEIVED");
     console.log("Body:", req.body);
-    
+
     const { name, email, phone, password, role } = req.body;
 
-    // Validation
     if (!name || !email || !phone || !password || !role) {
-      console.log("❌ VALIDATION FAILED - Missing fields");
       return res.status(400).json({
         success: false,
         message: "Please provide all required fields",
       });
     }
 
-    console.log("✅ Validation passed");
-    console.log(`👤 Registering user: ${email} (${role})`);
-
-    // Check if user already exists
-    const existingUser = await User.findOne({
-      $or: [{ email }, { phone }],
-    });
-
+    const existingUser = await User.findOne({ $or: [{ email }, { phone }] });
     if (existingUser) {
-      console.log("⚠️ User already exists:", email);
       return res.status(409).json({
         success: false,
-        message: existingUser.email === email ? "Email already registered" : "Phone number already registered",
+        message: existingUser.email === email
+          ? "Email already registered"
+          : "Phone number already registered",
       });
     }
 
-    // Generate OTP
+    await OTP.deleteMany({ email });
+
     const otp = generateOTP();
-    const otpExpire = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    const otpExpire = new Date(Date.now() + 10 * 60 * 1000);
 
-    console.log("🔐 Generated OTP:", otp);
-
-    // Save OTP to database
     await OTP.create({
       email,
       otp,
       expiresAt: otpExpire,
+      userData: { name, phone, password, role },
     });
 
-    console.log("✅ OTP Saved to database");
-
-    // Store user data temporarily (will be saved after OTP verification)
-    req.session = req.session || {};
-    req.session.tempUser = { name, email, phone, password, role };
-
-    console.log("✅ OTP Generated:", otp);
     console.log("═══════════════════════════════════════");
-    console.log("USE THIS OTP TO VERIFY:", otp);
+    console.log("🔑 OTP for", email, ":", otp);
     console.log("═══════════════════════════════════════");
 
     res.status(200).json({
@@ -86,7 +67,6 @@ exports.register = async (req, res) => {
   }
 };
 
-// Verify OTP Controller
 exports.verifyOTP = async (req, res) => {
   try {
     const { email, otp } = req.body;
@@ -98,7 +78,6 @@ exports.verifyOTP = async (req, res) => {
       });
     }
 
-    // Find and verify OTP
     const otpRecord = await OTP.findOne({ email, otp });
 
     if (!otpRecord) {
@@ -108,43 +87,29 @@ exports.verifyOTP = async (req, res) => {
       });
     }
 
-    // Check if OTP expired
-    if (otpRecord.expiresAt < Date.now()) {
+    if (new Date(otpRecord.expiresAt) < new Date()) {
       await OTP.deleteOne({ _id: otpRecord._id });
       return res.status(400).json({
         success: false,
-        message: "OTP expired. Please try again.",
+        message: "OTP expired. Please register again.",
       });
     }
 
-    // Get temporary user data from session/request
-    const tempUser = req.body.userData || req.session?.tempUser;
+    const { name, phone, password, role } = otpRecord.userData;
 
-    if (!tempUser) {
-      return res.status(400).json({
-        success: false,
-        message: "Registration data not found. Please register again.",
-      });
-    }
-
-    console.log("📝 Creating user with data:", tempUser);
-
-    // Create user
     const user = await User.create({
-      name: tempUser.name,
+      name,
       email,
-      phone: tempUser.phone,
-      password: tempUser.password,
-      role: tempUser.role,
+      phone,
+      password,
+      role,
       isVerified: true,
     });
 
     console.log("✅ User created successfully:", user._id, user.email);
 
-    // Delete OTP record
     await OTP.deleteOne({ _id: otpRecord._id });
 
-    // Generate JWT token
     const token = generateToken(user._id, user.role);
 
     res.status(201).json({
@@ -168,7 +133,6 @@ exports.verifyOTP = async (req, res) => {
   }
 };
 
-// Login Controller
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -180,7 +144,6 @@ exports.login = async (req, res) => {
       });
     }
 
-    // Find user and select password field
     const user = await User.findOne({ email }).select("+password");
 
     if (!user) {
@@ -190,7 +153,6 @@ exports.login = async (req, res) => {
       });
     }
 
-    // Check password
     const isPasswordMatch = await user.matchPassword(password);
 
     if (!isPasswordMatch) {
@@ -200,7 +162,6 @@ exports.login = async (req, res) => {
       });
     }
 
-    // Generate JWT token
     const token = generateToken(user._id, user.role);
 
     res.status(200).json({
@@ -223,7 +184,6 @@ exports.login = async (req, res) => {
   }
 };
 
-// Get current user
 exports.getCurrentUser = async (req, res) => {
   try {
     const user = await User.findById(req.userId);

@@ -390,6 +390,37 @@
 
     .error-msg.show { display: block; }
 
+    /* SUCCESS & ERROR MESSAGE STYLES */
+    .message {
+      margin-bottom: 16px;
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 13px;
+      font-weight: 700;
+      display: none;
+    }
+
+    .message.success {
+      display: block;
+      background-color: #dcfce7;
+      color: #15803d;
+      border: 1px solid #86efac;
+    }
+
+    .message.error {
+      display: block;
+      background-color: #fde8e8;
+      color: #b91c1c;
+      border: 1px solid #f5a5a5;
+    }
+
+    .message.info {
+      display: block;
+      background-color: #dbeafe;
+      color: #1e40af;
+      border: 1px solid #7dd3fc;
+    }
+
     /* ── RATING DISPLAY ── */
     .rating-bar {
       display: flex;
@@ -418,9 +449,9 @@
   <nav>
     <a href="index.html" class="nav-logo">Lokseva</a>
     <div class="nav-right">
-      <span class="nav-user">🔧 Rajan Sharma</span>
+      <span class="nav-user">🔧 <span id="provider-profile-user-name">Provider</span></span>
       <a href="provider-dashboard.html" class="btn-back">← Dashboard</a>
-      <a href="index.html" class="btn-logout">Logout</a>
+      <button onclick="logout()" class="btn-logout" style="border:none; cursor:pointer;">Logout</button>
     </div>
   </nav>
 
@@ -440,10 +471,10 @@
         <div class="avatar-edit-btn">✏️</div>
       </div>
       <div class="photo-info">
-        <h3>Rajan Sharma</h3>
+        <h3 id="provider-avatar-name">Provider Name</h3>
         <p>
-          <span class="badge-stat">⭐ 4.9 Rating</span>
-          <span class="badge-stat">📋 24 Jobs</span>
+          <span class="badge-stat">⭐ <span id="provider-rating">0</span> Rating</span>
+          <span class="badge-stat">📋 <span id="provider-jobs">0</span> Jobs</span>
         </p>
         <button class="btn-upload" onclick="document.getElementById('photo-input').click()">📷 Upload Photo</button>
         <button class="btn-remove-photo">Remove</button>
@@ -454,30 +485,30 @@
     <!-- PERSONAL INFORMATION -->
     <div class="form-card">
       <div class="card-title">👤 Personal Information</div>
-      <div class="error-msg" id="err-personal"></div>
+      <div class="error-msg" id="msg-profile"></div>
       <div class="form-grid">
         <div class="field-group">
-          <label>First Name</label>
-          <input type="text" id="first-name" value="Rajan" placeholder="First name" />
+          <label>Full Name</label>
+          <input type="text" id="name" placeholder="Full name" />
         </div>
         <div class="field-group">
-          <label>Last Name</label>
-          <input type="text" id="last-name" value="Sharma" placeholder="Last name" />
-        </div>
-        <div class="field-group">
-          <label>Email (Gmail only)</label>
-          <input type="email" id="email" value="rajan.sharma@gmail.com" placeholder="example@gmail.com" />
+          <label>Email</label>
+          <input type="email" id="email" placeholder="example@gmail.com" readonly style="background-color: #f5f5f5; cursor: not-allowed;" />
         </div>
         <div class="field-group">
           <label>Phone Number</label>
-          <input type="tel" id="phone" value="9876501234" maxlength="10" placeholder="10-digit number" />
+          <input type="tel" id="phone" maxlength="10" placeholder="10-digit number" />
         </div>
         <div class="field-group">
-          <label>Date of Birth</label>
-          <input type="date" id="dob" value="1988-03-20" />
+          <label>Address</label>
+          <input type="text" id="address" placeholder="Full address" />
         </div>
         <div class="field-group">
-          <label>Gender</label>
+          <label>City</label>
+          <input type="text" id="city" placeholder="City" />
+        </div>
+      </div>
+    </div>
           <select id="gender">
             <option value="">Select gender</option>
             <option value="male" selected>Male</option>
@@ -600,8 +631,8 @@
 
     <!-- SAVE BAR -->
     <div class="save-bar">
-      <a href="provider-dashboard.html" class="btn-cancel">Cancel</a>
-      <button class="btn-save" onclick="saveProfile()">💾 Save Changes</button>
+      <button onclick="cancelEdit()" class="btn-cancel">Cancel</button>
+      <button id="save-btn" class="btn-save" onclick="saveProfile()">💾 Save Changes</button>
     </div>
 
     <!-- DANGER ZONE -->

@@ -3,49 +3,103 @@
 document.addEventListener("DOMContentLoaded", async () => {
   requireAuth();
   
-  const user = getStoredUser();
-  
-  // Check if editing existing or creating new
-  const urlParams = new URLSearchParams(window.location.search);
-  const isEditing = urlParams.has("id");
-  
-  if (isEditing) {
-    const providerId = urlParams.get("id");
-    await loadProviderProfile(providerId);
-  } else {
-    // New provider profile - load current user info
-    if (user) {
-      const userProfile = await getUserProfile();
-      if (userProfile) {
-        document.getElementById("name").value = userProfile.name || "";
-        document.getElementById("email").value = userProfile.email || "";
-        document.getElementById("phone").value = userProfile.phone || "";
-      }
-    }
-  }
-});
-
-// Load provider profile
-async function loadProviderProfile(providerId) {
   try {
-    const provider = await getProviderProfile(providerId);
+    const user = await getUserProfile();
     
-    if (provider) {
-      // Fill form with provider data
-      const user = provider.userId;
+    if (user) {
+      // Populate navbar
+      document.getElementById("provider-profile-user-name").textContent = user.name || "Provider";
+      
+      // Populate avatar with initials
+      const initials = user.name
+        ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+        : 'P';
+      document.getElementById("provider-avatar").textContent = initials;
+      
+      // Populate avatar name
+      document.getElementById("provider-avatar-name").textContent = user.name || "Provider";
+      
+      // Populate form with user data
       document.getElementById("name").value = user.name || "";
       document.getElementById("email").value = user.email || "";
       document.getElementById("phone").value = user.phone || "";
-      document.getElementById("serviceCategory").value = provider.serviceCategory || "";
-      document.getElementById("experience").value = provider.experience || 0;
-      document.getElementById("bio").value = provider.bio || "";
-      document.getElementById("hourlyRate").value = provider.hourlyRate || 0;
-      document.getElementById("skills").value = (provider.skills || []).join(", ");
+      document.getElementById("address").value = user.address || "";
+      document.getElementById("city").value = user.city || "";
+      
+      console.log("✅ Provider profile loaded:", user);
     }
   } catch (error) {
-    console.error("Error loading provider profile:", error);
+    console.error("Error loading profile:", error);
     showMessage("msg-profile", "Error loading profile data", "error");
   }
+});
+
+// Handle profile form submission
+async function saveProfile(e) {
+  console.log("💾 Save profile clicked (Provider)");
+  if (e) e.preventDefault();
+  
+  try {
+    const name = document.getElementById("name").value;
+    const phone = document.getElementById("phone").value;
+    const address = document.getElementById("address").value;
+    const city = document.getElementById("city").value;
+    
+    console.log("📝 Form data:", { name, phone, address, city });
+    
+    const profileData = {
+      name: name,
+      phone: phone,
+      address: address,
+      city: city,
+    };
+
+    // Validation
+    if (!profileData.name || !profileData.phone) {
+      console.warn("❌ Validation failed: Missing required fields");
+      showMessage("msg-profile", "Please fill in all required fields", "error");
+      return;
+    }
+
+    const btn = document.getElementById("save-btn");
+    if (!btn) {
+      console.error("❌ Save button not found!");
+      return;
+    }
+    
+    btn.disabled = true;
+    btn.innerHTML = "Saving...";
+    console.log("🔄 Sending update request to API...");
+
+    const response = await updateUserProfile(profileData);
+    console.log("✅ API Response:", response);
+    
+    showMessage("msg-profile", "Profile updated successfully! 🎉", "success");
+    
+    // Update avatar initials
+    const initials = profileData.name
+      ? profileData.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+      : 'P';
+    document.getElementById("provider-avatar").textContent = initials;
+    document.getElementById("provider-avatar-name").textContent = profileData.name;
+    document.getElementById("provider-profile-user-name").textContent = profileData.name;
+    
+    console.log("✅ Profile updated successfully");
+  } catch (error) {
+    console.error("❌ Error updating profile:", error);
+    showMessage("msg-profile", error.message || "Error updating profile", "error");
+  } finally {
+    const btn = document.getElementById("save-btn");
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = "Save Changes";
+    }
+  }
+}
+
+// Cancel and go back
+function cancelEdit() {
+  window.location.href = "provider-dashboard.html";
 }
 
 // Handle profile form submission

@@ -12,12 +12,31 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   if (user.role !== "provider") {
-    window.location.href = "user-dashboard.html";
-    return;
+    // Allow access to provider dashboard if user just wants to view it
+    console.log("User role:", user.role);
   }
 
-  // Display user info
-  document.getElementById("provider-name").textContent = user.name;
+  // First, display name from localStorage (immediate)
+  if (user && user.name) {
+    const firstName = user.name.split(' ')[0];
+    document.getElementById("provider-dashboard-name").textContent = firstName;
+    document.getElementById("provider-user-name").textContent = user.name;
+    console.log("✅ Provider name from localStorage:", user.name);
+  }
+
+  // Then, load fresh user profile from API (background)
+  try {
+    const profile = await getUserProfile();
+    if (profile && profile.name) {
+      const firstName = profile.name.split(' ')[0];
+      document.getElementById("provider-dashboard-name").textContent = firstName;
+      document.getElementById("provider-user-name").textContent = profile.name;
+      console.log("✅ Provider profile loaded from API:", profile.name);
+    }
+  } catch (error) {
+    console.error("Error loading profile from API:", error);
+    // localStorage data will still be displayed
+  }
 
   // Load provider profile
   await loadProviderProfile(user.id);

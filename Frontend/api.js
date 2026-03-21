@@ -63,9 +63,19 @@ async function apiCall(endpoint, method = "GET", body = null) {
     options.body = JSON.stringify(body);
   }
 
+  console.log(`📤 API Call: ${method} ${endpoint}`, body ? { body } : "");
+
   try {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
-    const data = await response.json();
+    let data;
+    
+    try {
+      data = await response.json();
+    } catch (e) {
+      data = { message: "Invalid JSON response" };
+    }
+
+    console.log(`📥 Response Status: ${response.status}`, data);
 
     if (!response.ok) {
       // Check if token expired
@@ -73,12 +83,14 @@ async function apiCall(endpoint, method = "GET", body = null) {
         clearAuthData();
         window.location.href = "login.html";
       }
-      throw new Error(data.message || "API Error");
+      const errorMsg = data.message || `HTTP ${response.status}: API Error`;
+      console.error(`❌ API Error: ${errorMsg}`, data);
+      throw new Error(errorMsg);
     }
 
     return data;
   } catch (error) {
-    console.error("API Error:", error);
+    console.error(`❌ API Call Failed: ${endpoint}`, error.message);
     throw error;
   }
 }
@@ -162,10 +174,17 @@ async function getUserProfile() {
 // Update user profile
 async function updateUserProfile(profileData) {
   try {
+    console.log("🔌 API: Updating user profile", profileData);
+    console.log("🔑 Auth Token:", getAuthToken() ? "✅ Present" : "❌ Missing");
+    
     const response = await apiCall("/users/profile", "PUT", profileData);
+    
+    console.log("✅ Update response received:", response);
     setAuthData(getAuthToken(), response.user);
     return response;
   } catch (error) {
+    console.error("❌ API Error in updateUserProfile:", error.message);
+    console.error("📋 Full error:", error);
     throw error;
   }
 }
@@ -234,6 +253,17 @@ async function getAllProviders(filters = {}) {
     return response.providers;
   } catch (error) {
     console.error("Error fetching providers:", error);
+    return [];
+  }
+}
+
+// Get all providers for admin (no filtering, unverified included)
+async function getAllProvidersAdmin() {
+  try {
+    const response = await apiCall("/providers/admin/all", "GET");
+    return response.providers;
+  } catch (error) {
+    console.error("Error fetching providers for admin:", error);
     return [];
   }
 }

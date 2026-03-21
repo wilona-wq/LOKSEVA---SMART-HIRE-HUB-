@@ -374,6 +374,37 @@
 
     .error-msg.show { display: block; }
 
+    /* SUCCESS & ERROR MESSAGE STYLES */
+    .message {
+      margin-bottom: 16px;
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 13px;
+      font-weight: 700;
+      display: none;
+    }
+
+    .message.success {
+      display: block;
+      background-color: #dcfce7;
+      color: #15803d;
+      border: 1px solid #86efac;
+    }
+
+    .message.error {
+      display: block;
+      background-color: #fde8e8;
+      color: #b91c1c;
+      border: 1px solid #f5a5a5;
+    }
+
+    .message.info {
+      display: block;
+      background-color: #dbeafe;
+      color: #1e40af;
+      border: 1px solid #7dd3fc;
+    }
+
     /* Booking history badge */
     .badge-stat {
       display: inline-flex;
@@ -400,9 +431,9 @@
   <nav>
     <a href="index.html" class="nav-logo">Lokseva</a>
     <div class="nav-right">
-      <span class="nav-user">👤 Rahul Mehta</span>
+      <span class="nav-user">👤 <span id="profile-user-name">User</span></span>
       <a href="user-dashboard.html" class="btn-back">← Dashboard</a>
-      <a href="index.html" class="btn-logout">Logout</a>
+      <button onclick="logout()" class="btn-logout" style="border:none; cursor:pointer;">Logout</button>
     </div>
   </nav>
 
@@ -418,12 +449,12 @@
     <!-- PROFILE PHOTO -->
     <div class="photo-card">
       <div class="avatar-wrap">
-        <div class="avatar">RM</div>
+        <div class="avatar" id="avatar">RM</div>
         <div class="avatar-edit-btn">✏️</div>
       </div>
       <div class="photo-info">
-        <h3>Rahul Mehta</h3>
-        <p>Member since Jan 2025 &nbsp;•&nbsp; <span class="badge-stat">📋 8 Bookings</span></p>
+        <h3 id="avatar-name">User</h3>
+        <p><span id="member-since">Member since Jan 2025</span> &nbsp;•&nbsp; <span class="badge-stat">📋 <span id="booking-count">0</span> Bookings</span></p>
         <button class="btn-upload" onclick="document.getElementById('photo-input').click()">📷 Upload Photo</button>
         <button class="btn-remove-photo">Remove</button>
         <input type="file" id="photo-input" accept="image/*" style="display:none" onchange="handlePhotoUpload(event)"/>
@@ -433,49 +464,27 @@
     <!-- PERSONAL INFORMATION -->
     <div class="form-card">
       <div class="card-title">👤 Personal Information</div>
-      <div class="error-msg" id="err-personal"></div>
+      <div class="error-msg" id="msg-profile"></div>
       <div class="form-grid">
         <div class="field-group">
-          <label>First Name</label>
-          <input type="text" id="first-name" value="Rahul" placeholder="First name" />
+          <label>Full Name</label>
+          <input type="text" id="name" placeholder="Full name" />
         </div>
         <div class="field-group">
-          <label>Last Name</label>
-          <input type="text" id="last-name" value="Mehta" placeholder="Last name" />
-        </div>
-        <div class="field-group">
-          <label>Email (Gmail only)</label>
-          <input type="email" id="email" value="rahul.mehta@gmail.com" placeholder="example@gmail.com" />
+          <label>Email</label>
+          <input type="email" id="email" placeholder="example@gmail.com" readonly style="background-color: #f5f5f5; cursor: not-allowed;" />
         </div>
         <div class="field-group">
           <label>Phone Number</label>
-          <input type="tel" id="phone" value="9876543210" maxlength="10" placeholder="10-digit number" />
+          <input type="tel" id="phone" maxlength="10" placeholder="10-digit number" />
         </div>
         <div class="field-group">
-          <label>Date of Birth</label>
-          <input type="date" id="dob" value="1995-06-15" />
-        </div>
-        <div class="field-group">
-          <label>Gender</label>
-          <select id="gender">
-            <option value="">Select gender</option>
-            <option value="male" selected>Male</option>
-            <option value="female">Female</option>
-            <option value="other">Other</option>
-            <option value="prefer-not">Prefer not to say</option>
-          </select>
-        </div>
-        <div class="field-group full">
           <label>Address</label>
-          <input type="text" id="address" value="42 Shastri Nagar, Andheri West" placeholder="Full address" />
+          <input type="text" id="address" placeholder="Full address" />
         </div>
         <div class="field-group">
           <label>City</label>
-          <input type="text" id="city" value="Mumbai" placeholder="City" />
-        </div>
-        <div class="field-group">
-          <label>Pincode</label>
-          <input type="text" id="pincode" value="400053" maxlength="6" placeholder="6-digit pincode" />
+          <input type="text" id="city" placeholder="City" />
         </div>
       </div>
     </div>
@@ -521,8 +530,8 @@
 
     <!-- SAVE BUTTONS -->
     <div class="save-bar">
-      <a href="user-dashboard.html" class="btn-cancel">Cancel</a>
-      <button class="btn-save" onclick="saveProfile()">💾 Save Changes</button>
+      <button onclick="cancelEdit()" class="btn-cancel">Cancel</button>
+      <button id="save-btn" class="btn-save" onclick="saveProfile()">💾 Save Changes</button>
     </div>
 
     <!-- DANGER ZONE -->

@@ -4,9 +4,26 @@
 document.addEventListener("DOMContentLoaded", async () => {
   requireAuth();
 
+  // First, display name from localStorage (immediate)
   const user = getStoredUser();
-  if (user) {
+  if (user && user.name) {
+    const firstName = user.name.split(' ')[0];
+    document.getElementById("dashboard-name").textContent = firstName;
     document.getElementById("user-name").textContent = user.name;
+    console.log("✅ User name from localStorage:", user.name);
+  }
+
+  // Then, load fresh user data from API (background)
+  try {
+    const profile = await getUserProfile();
+    if (profile) {
+      const firstName = profile.name ? profile.name.split(' ')[0] : 'User';
+      document.getElementById("dashboard-name").textContent = firstName;
+      document.getElementById("user-name").textContent = profile.name || 'User';
+      console.log("✅ User data loaded from API:", profile.name);
+    }
+  } catch (error) {
+    console.error("Error loading user profile:", error);
   }
 
   // Load nearby providers on page load

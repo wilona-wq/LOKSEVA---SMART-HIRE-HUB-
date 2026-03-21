@@ -4,6 +4,7 @@ const {
   getProviderProfile,
   updateProviderProfile,
   getAllProviders,
+  getAllProvidersAdmin,
   getNearbyProviders,
   deleteProviderProfile,
 } = require("../controllers/providerController");
@@ -11,6 +12,7 @@ const { authenticate, authorize } = require("../middleware/auth");
 const router = express.Router();
 
 router.post("/create", authenticate, authorize("provider"), createProviderProfile);
+router.get("/admin/all", authenticate, authorize("admin"), getAllProvidersAdmin);
 router.get("/:id", getProviderProfile);
 router.put("/update", authenticate, authorize("provider"), updateProviderProfile);
 router.get("/", getAllProviders);

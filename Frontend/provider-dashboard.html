@@ -224,17 +224,17 @@
   <nav>
     <a href="index.html" class="nav-logo">Lokseva</a>
     <div class="nav-right">
-      <span class="nav-user">🔧 Welcome, Provider</span>
+      <span class="nav-user">🔧 <span id="provider-user-name">Provider</span></span>
       <!-- Link to provider edit profile -->
       <a href="provider_profile.html" class="btn-edit">Edit Profile</a>
-      <!-- Logout goes back to the landing page -->
-      <a href="index.html" class="btn-logout">Logout</a>
+      <!-- Logout calls logout function -->
+      <button onclick="logout()" class="btn-logout" style="border:none; cursor:pointer;">Logout</button>
     </div>
   </nav>
 
   <!-- HERO BANNER -->
   <div class="hero-banner">
-    <h1>Hello, <span>Rajan!</span> 👋</h1>
+    <h1>Hello, <span id="provider-dashboard-name">Provider</span>! 👋</h1>
     <p>Here is your dashboard overview for today.</p>
   </div>
 

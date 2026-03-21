@@ -349,6 +349,9 @@
     // Stores email after registration so OTP verify knows who to verify
     var currentEmail = '';
     var currentRole  = '';
+    var currentName = '';
+    var currentPhone = '';
+    var currentPassword = '';
 
     // ── Role switcher ──
     function selectRole(role) {
@@ -419,7 +422,7 @@
       showMessage(role, '⏳ Sending OTP to ' + email + '...', 'info');
 
       try {
-        const res  = await fetch('/auth/register', {
+        const res  = await fetch('/api/auth/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'same-origin',
@@ -437,6 +440,9 @@
         // ── OTP sent! Show OTP input box ──
         currentEmail = email;
         currentRole  = role;
+        currentName = name;
+        currentPhone = phone;
+        currentPassword = password;
         showMessage(role, '✅ OTP sent to your Gmail! Check your inbox.', 'success');
         document.getElementById('otp-section-' + role).classList.add('show');
         btn.textContent = '✅ OTP Sent';
@@ -465,11 +471,11 @@
       btn.textContent = '⏳ Verifying...';
 
       try {
-        const res  = await fetch('/auth/verify-otp', {
+        const res  = await fetch('/api/auth/verify-otp', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'same-origin',
-          body: JSON.stringify({ email: currentEmail, otp })
+          body: JSON.stringify({ email: currentEmail, otp, userData: { name: currentName, phone: currentPhone, password: currentPassword, role: currentRole } })
         });
         const data = await res.json();
 

@@ -258,17 +258,17 @@
   <nav>
     <a href="index.html" class="nav-logo">Lokseva</a>
     <div class="nav-right">
-      <span class="nav-user">👤 Welcome, User</span>
+      <span class="nav-user">👤 <span id="user-name">User</span></span>
       <!-- Link to edit profile -->
       <a href="user_profile.html" class="btn-edit">Edit Profile</a>
-      <!-- Logout redirects back to the landing page (index.html) -->
-      <a href="index.html" class="btn-logout">Logout</a>
+      <!-- Logout button calls logout function -->
+      <button onclick="logout()" class="btn-logout" style="border:none; cursor:pointer; text-decoration:none;">Logout</button>
     </div>
   </nav>
 
   <!-- HERO BANNER -->
   <div class="hero-banner">
-    <h1>Hello, <span>Rahul!</span> 👋</h1>
+    <h1>Hello, <span id="dashboard-name">User</span>! 👋</h1>
     <p>What service do you need today?</p>
     <a href="nearby_providers.html" class="btn-browse">🔍 Browse Providers</a>
   </div>
@@ -338,34 +338,7 @@
           </tr>
         </thead>
         <tbody id="bookings-tbody">
-          <tr>
-            <td>⚡ Electrician</td>
-            <td>Rajan Sharma</td>
-            <td>15 Feb 2026</td>
-            <td><span class="badge badge-completed">Completed</span></td>
-            <td><button class="btn-rate" onclick="openRating('b1','Rajan Sharma')">⭐ Rate</button></td>
-          </tr>
-          <tr>
-            <td>🔧 Plumber</td>
-            <td>Ajay Kumar</td>
-            <td>10 Feb 2026</td>
-            <td><span class="badge badge-completed">Completed</span></td>
-            <td><button class="btn-rate" onclick="openRating('b2','Ajay Kumar')">⭐ Rate</button></td>
-          </tr>
-          <tr>
-            <td>🧹 Cleaner</td>
-            <td>Priya Devi</td>
-            <td>18 Feb 2026</td>
-            <td><span class="badge badge-pending">Pending</span></td>
-            <td><span style="color:#a0b0c0;font-size:12px;">Not yet</span></td>
-          </tr>
-          <tr>
-            <td>🖌️ Painter</td>
-            <td>Suresh Yadav</td>
-            <td>5 Feb 2026</td>
-            <td><span class="badge badge-cancelled">Cancelled</span></td>
-            <td><span style="color:#a0b0c0;font-size:12px;">—</span></td>
-          </tr>
+          <tr><td colspan="5" style="text-align:center;color:#607080;">⏳ Loading your bookings...</td></tr>
         </tbody>
       </table>
     </div>
